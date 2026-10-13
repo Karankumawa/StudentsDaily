@@ -7,6 +7,7 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.School
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
@@ -15,6 +16,12 @@ import kotlinx.serialization.Serializable
 sealed interface ScreenRoute : NavKey {
     val title: String
     val icon: ImageVector
+
+    @Serializable
+    data object Intro : ScreenRoute {
+        override val title: String = "Welcome"
+        override val icon: ImageVector = Icons.Rounded.School
+    }
 
     @Serializable
     data object Expenses : ScreenRoute {
@@ -54,6 +61,6 @@ sealed interface ScreenRoute : NavKey {
 
     companion object {
         val NAVIGATION_ITEMS: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes, Profile)
-        val ALL: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes, Profile, Login)
+        val ALL: List<ScreenRoute> = listOf(Intro, Expenses, Timetable, Tasks, HabitsNotes, Profile, Login)
     }
 }

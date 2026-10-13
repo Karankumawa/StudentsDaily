@@ -12,6 +12,17 @@ object AuthPreferences {
     private const val KEY_USER_ID = "user_id"
     private const val KEY_USER_EMAIL = "user_email"
     private const val KEY_USER_FULL_NAME = "user_full_name"
+    private const val KEY_INTRO_COMPLETED = "has_completed_intro"
+
+    fun isIntroCompleted(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_INTRO_COMPLETED, false)
+    }
+
+    fun setIntroCompleted(context: Context, completed: Boolean = true) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putBoolean(KEY_INTRO_COMPLETED, completed) }
+    }
 
     fun saveSession(context: Context, session: SupabaseSession) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -38,6 +49,10 @@ object AuthPreferences {
 
     fun clearSession(context: Context) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit { clear() }
+        val introCompleted = prefs.getBoolean(KEY_INTRO_COMPLETED, false)
+        prefs.edit {
+            clear()
+            putBoolean(KEY_INTRO_COMPLETED, introCompleted)
+        }
     }
 }

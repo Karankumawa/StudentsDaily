@@ -52,9 +52,11 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.example.studentsdaily.data.local.AuthPreferences
 import com.example.studentsdaily.data.repository.StudentsDailyRepository
 import com.example.studentsdaily.ui.screens.ExpensesScreen
 import com.example.studentsdaily.ui.screens.HabitsNotesScreen
+import com.example.studentsdaily.ui.screens.IntroScreen
 import com.example.studentsdaily.ui.screens.LoginScreen
 import com.example.studentsdaily.ui.screens.ProfileScreen
 import com.example.studentsdaily.ui.screens.TasksScreen
@@ -75,9 +77,22 @@ fun StudentsDailyMainApp(
 
     val currentSession by repository.currentSession.collectAsState()
 
+    // Determine startup route
+    val hasCompletedIntro = remember { AuthPreferences.isIntroCompleted(context) }
+    val initialRoute = remember {
+        val session = repository.currentSession.value
+        if (!hasCompletedIntro) {
+            ScreenRoute.Intro
+        } else if (session == null) {
+            ScreenRoute.Login
+        } else {
+            ScreenRoute.Expenses
+        }
+    }
+
     // Navigation 3 BackStack
-    val backStack = rememberNavBackStack(ScreenRoute.Expenses)
-    val currentRoute = backStack.lastOrNull() as? ScreenRoute ?: ScreenRoute.Expenses
+    val backStack = rememberNavBackStack(initialRoute)
+    val currentRoute = backStack.lastOrNull() as? ScreenRoute ?: initialRoute
 
     // Adaptive window width size class
     @Suppress("DEPRECATION")
@@ -99,124 +114,130 @@ fun StudentsDailyMainApp(
         }
     }
 
+    val showTopBar = currentRoute != ScreenRoute.Intro
+    val showBottomBar = isCompactWidth && currentRoute in ScreenRoute.NAVIGATION_ITEMS
+    val showNavRail = !isCompactWidth && currentRoute in ScreenRoute.NAVIGATION_ITEMS
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                if (currentRoute != ScreenRoute.Profile) {
-                                    backStack.add(ScreenRoute.Profile)
-                                }
-                            }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Box(
+            if (showTopBar) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.School,
-                                contentDescription = "StudentsDaily Branding",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column(horizontalAlignment = Alignment.Start) {
-                            Text(
-                                text = greetingText,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = "${currentRoute.title} • $dateFormatted",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    if (currentSession != null) {
-                        AssistChip(
-                            onClick = {
-                                if (currentRoute != ScreenRoute.Profile) {
-                                    backStack.add(ScreenRoute.Profile)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    if (currentRoute != ScreenRoute.Profile) {
+                                        backStack.add(ScreenRoute.Profile)
+                                    }
                                 }
-                            },
-                            label = {
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.School,
+                                    contentDescription = "StudentsDaily Branding",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(horizontalAlignment = Alignment.Start) {
                                 Text(
-                                    currentSession?.user?.fullName?.ifBlank {
-                                        currentSession?.user?.email?.substringBefore("@")
-                                    } ?: "Profile",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    text = greetingText,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Rounded.Person,
-                                    contentDescription = "User Profile",
-                                    modifier = Modifier.size(16.dp)
+                                Text(
+                                    text = "${currentRoute.title} • $dateFormatted",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
-                            },
-                            shape = RoundedCornerShape(20.dp),
-                            modifier = Modifier.padding(end = 8.dp),
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            )
-                        )
-                    } else {
-                        AssistChip(
-                            onClick = {
-                                if (currentRoute != ScreenRoute.Profile) {
-                                    backStack.add(ScreenRoute.Profile)
-                                }
-                            },
-                            label = { Text("Profile") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Rounded.AccountCircle,
-                                    contentDescription = "Profile",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            },
-                            shape = RoundedCornerShape(20.dp),
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
-                        IconButton(
-                            onClick = {
-                                if (currentRoute != ScreenRoute.Login) {
-                                    backStack.add(ScreenRoute.Login)
-                                }
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.Login,
-                                contentDescription = "Sign In",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    },
+                    actions = {
+                        if (currentSession != null) {
+                            AssistChip(
+                                onClick = {
+                                    if (currentRoute != ScreenRoute.Profile) {
+                                        backStack.add(ScreenRoute.Profile)
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        currentSession?.user?.fullName?.ifBlank {
+                                            currentSession?.user?.email?.substringBefore("@")
+                                        } ?: "Profile",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Person,
+                                        contentDescription = "User Profile",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                },
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier.padding(end = 8.dp),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                )
+                            )
+                        } else {
+                            AssistChip(
+                                onClick = {
+                                    if (currentRoute != ScreenRoute.Profile) {
+                                        backStack.add(ScreenRoute.Profile)
+                                    }
+                                },
+                                label = { Text("Profile") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.AccountCircle,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                },
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                            IconButton(
+                                onClick = {
+                                    if (currentRoute != ScreenRoute.Login) {
+                                        backStack.add(ScreenRoute.Login)
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.Login,
+                                    contentDescription = "Sign In",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
-            )
+            }
         },
         bottomBar = {
-            if (isCompactWidth) {
+            if (showBottomBar) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface
                 ) {
@@ -253,7 +274,7 @@ fun StudentsDailyMainApp(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (!isCompactWidth) {
+            if (showNavRail) {
                 NavigationRail(
                     modifier = Modifier.fillMaxHeight(),
                     containerColor = MaterialTheme.colorScheme.surface
@@ -295,6 +316,19 @@ fun StudentsDailyMainApp(
                 ) { key ->
                     NavEntry(key = key) { currentKey ->
                         when (currentKey) {
+                            is ScreenRoute.Intro -> IntroScreen(
+                                onCompleteIntro = {
+                                    if (backStack.size > 0) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    }
+                                    val session = repository.currentSession.value
+                                    if (session != null) {
+                                        backStack.add(ScreenRoute.Expenses)
+                                    } else {
+                                        backStack.add(ScreenRoute.Login)
+                                    }
+                                }
+                            )
                             is ScreenRoute.Expenses -> ExpensesScreen()
                             is ScreenRoute.Timetable -> TimetableScreen()
                             is ScreenRoute.Tasks -> TasksScreen()
@@ -309,17 +343,22 @@ fun StudentsDailyMainApp(
                             )
                             is ScreenRoute.Login -> LoginScreen(
                                 onContinueAsGuest = {
-                                    if (backStack.size > 1) {
+                                    if (backStack.size > 0) {
                                         backStack.removeAt(backStack.size - 1)
-                                    } else {
+                                    }
+                                    if (backStack.isEmpty()) {
                                         backStack.add(ScreenRoute.Expenses)
                                     }
                                 },
                                 onAuthSuccess = {
-                                    if (backStack.size > 1) {
+                                    if (backStack.size > 0) {
                                         backStack.removeAt(backStack.size - 1)
                                     }
-                                    backStack.add(ScreenRoute.Profile)
+                                    if (backStack.isEmpty()) {
+                                        backStack.add(ScreenRoute.Expenses)
+                                    } else {
+                                        backStack.add(ScreenRoute.Profile)
+                                    }
                                 }
                             )
                             else -> ExpensesScreen()
