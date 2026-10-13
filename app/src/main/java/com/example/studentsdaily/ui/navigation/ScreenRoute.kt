@@ -59,8 +59,15 @@ sealed interface ScreenRoute : NavKey {
         override val icon: ImageVector = Icons.Rounded.AccountCircle
     }
 
+    @Serializable
+    data class NoteDetail(val noteId: String = "") : ScreenRoute {
+        override val title: String = "Note Detail"
+        @kotlinx.serialization.Transient
+        override val icon: ImageVector = Icons.AutoMirrored.Rounded.Notes
+    }
+
     companion object {
         val NAVIGATION_ITEMS: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes, Profile)
-        val ALL: List<ScreenRoute> = listOf(Intro, Expenses, Timetable, Tasks, HabitsNotes, Profile, Login)
+        val ALL: List<ScreenRoute> = listOf(Intro, Expenses, Timetable, Tasks, HabitsNotes, Profile, Login, NoteDetail())
     }
 }

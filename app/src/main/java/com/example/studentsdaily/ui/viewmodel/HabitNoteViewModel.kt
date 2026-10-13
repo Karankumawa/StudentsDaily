@@ -65,6 +65,18 @@ class HabitNoteViewModel(
         repository.addNote(note)
     }
 
+    fun updateNote(id: String, title: String, content: String, categoryTag: String, dateString: String = "Today") {
+        if (title.isBlank()) return
+        val updatedNote = Note(
+            id = id,
+            title = title.trim(),
+            content = content.trim(),
+            categoryTag = categoryTag.ifBlank { "General" },
+            dateString = dateString
+        )
+        repository.updateNote(updatedNote)
+    }
+
     fun deleteNote(id: String) {
         repository.deleteNote(id)
     }

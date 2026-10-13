@@ -47,6 +47,9 @@ class StudentsDailyRepository private constructor() {
     private val _expenses = MutableStateFlow<List<Expense>>(initialExpenses())
     val expenses: StateFlow<List<Expense>> = _expenses.asStateFlow()
 
+    private val _monthlyBudget = MutableStateFlow(5000.0)
+    val monthlyBudget: StateFlow<Double> = _monthlyBudget.asStateFlow()
+
     private val _timetableItems = MutableStateFlow<List<TimetableItem>>(initialTimetableItems())
     val timetableItems: StateFlow<List<TimetableItem>> = _timetableItems.asStateFlow()
 
@@ -62,12 +65,19 @@ class StudentsDailyRepository private constructor() {
     fun initializeWithContext(context: Context) {
         if (appContext != null) return
         appContext = context.applicationContext
+        _monthlyBudget.value = AuthPreferences.getMonthlyBudget(context)
         val savedSession = AuthPreferences.loadSession(context)
         if (savedSession != null) {
             _currentSession.value = savedSession
             _isGuestMode.value = false
             refreshUserDataFromSupabase()
         }
+    }
+
+    fun updateMonthlyBudget(newBudget: Double) {
+        if (newBudget <= 0) return
+        _monthlyBudget.value = newBudget
+        appContext?.let { AuthPreferences.setMonthlyBudget(it, newBudget) }
     }
 
     // =========================================================================
@@ -199,6 +209,16 @@ class StudentsDailyRepository private constructor() {
         }
     }
 
+    fun updateExpense(expense: Expense) {
+        _expenses.value = _expenses.value.map { if (it.id == expense.id) expense else it }
+        val session = _currentSession.value
+        if (session != null) {
+            repositoryScope.launch {
+                supabaseManager.updateExpense(session.user.id, session.accessToken, expense)
+            }
+        }
+    }
+
     fun deleteExpense(id: String) {
         _expenses.value = _expenses.value.filterNot { it.id == id }
         val session = _currentSession.value
@@ -326,6 +346,16 @@ class StudentsDailyRepository private constructor() {
         if (session != null) {
             repositoryScope.launch {
                 supabaseManager.insertNote(session.user.id, session.accessToken, note)
+            }
+        }
+    }
+
+    fun updateNote(note: Note) {
+        _notes.value = _notes.value.map { if (it.id == note.id) note else it }
+        val session = _currentSession.value
+        if (session != null) {
+            repositoryScope.launch {
+                supabaseManager.updateNote(session.user.id, session.accessToken, note)
             }
         }
     }

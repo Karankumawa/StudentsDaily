@@ -22,15 +22,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.CurrencyRupee
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FilterList
-import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Title
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -78,6 +80,8 @@ fun ExpensesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddBottomSheet by remember { mutableStateOf(false) }
+    var showEditBudgetDialog by remember { mutableStateOf(false) }
+    var expenseToEdit by remember { mutableStateOf<Expense?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Calculate daily average spent
@@ -85,6 +89,7 @@ fun ExpensesScreen(
         Calendar.getInstance().get(Calendar.DAY_OF_MONTH).coerceAtLeast(1)
     }
     val dailyAvgSpent = uiState.totalExpenseAmount / currentDayOfMonth
+    val remainingBudget = uiState.monthlyBudget - uiState.totalExpenseAmount
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -158,7 +163,9 @@ fun ExpensesScreen(
                             Spacer(modifier = Modifier.height(14.dp))
 
                             // Monthly Budget Target & Spending Progress
-                            val budgetProgress = (uiState.totalExpenseAmount / uiState.monthlyBudget).toFloat().coerceIn(0f, 1f)
+                            val budgetProgress = if (uiState.monthlyBudget > 0) {
+                                (uiState.totalExpenseAmount / uiState.monthlyBudget).toFloat().coerceIn(0f, 1f)
+                            } else 0f
                             val budgetPercent = (budgetProgress * 100).toInt()
 
                             Row(
@@ -166,11 +173,25 @@ fun ExpensesScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "Monthly Budget: ₹${String.format(Locale.US, "%.2f", uiState.monthlyBudget)}",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                    color = Color(0xFFDCFCE7)
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Monthly Budget: ₹${String.format(Locale.US, "%.2f", uiState.monthlyBudget)}",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                        color = Color(0xFFDCFCE7)
+                                    )
+                                    IconButton(
+                                        onClick = { showEditBudgetDialog = true },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Edit,
+                                            contentDescription = "Edit Budget",
+                                            tint = Color(0xFFDCFCE7),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = if (budgetPercent > 90) Color(0xFFEF4444) else Color(0xFF10B981)
@@ -184,7 +205,7 @@ fun ExpensesScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
 
                             LinearProgressIndicator(
                                 progress = { budgetProgress },
@@ -197,27 +218,53 @@ fun ExpensesScreen(
                                 strokeCap = StrokeCap.Round
                             )
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            // Daily Average Spent Tag Badge
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color.White.copy(alpha = 0.15f)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (remainingBudget < 0) Color(0xFFEF4444).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f)
                                 ) {
-                                    Text(
-                                        text = "Daily Avg Spent: ",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFFDCFCE7)
-                                    )
-                                    Text(
-                                        text = "₹${String.format(Locale.US, "%.2f", dailyAvgSpent)} / day",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Remaining: ",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFFDCFCE7)
+                                        )
+                                        Text(
+                                            text = "₹${String.format(Locale.US, "%.2f", remainingBudget)}",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                            color = if (remainingBudget < 0) Color(0xFFFECACA) else Color.White
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color.White.copy(alpha = 0.15f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Daily Avg: ",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFFDCFCE7)
+                                        )
+                                        Text(
+                                            text = "₹${String.format(Locale.US, "%.2f", dailyAvgSpent)} / day",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                            color = Color.White
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -226,7 +273,7 @@ fun ExpensesScreen(
             }
 
             item {
-                // Category Chips Row with specific background tints
+                // Category Chips Row
                 Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -252,14 +299,12 @@ fun ExpensesScreen(
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // "All" Chip
                         FilterChip(
                             selected = uiState.selectedCategoryFilter == null,
                             onClick = { viewModel.setCategoryFilter(null) },
                             label = { Text("All (${uiState.expenses.size})") }
                         )
 
-                        // Category Chips with specific background tints (Red Food, Blue Transport, Purple Academic, Orange Entertainment, Teal Health, Green Utilities)
                         ExpenseCategory.entries.forEach { category ->
                             val isSelected = uiState.selectedCategoryFilter == category
                             val categoryCount = uiState.expenses.count { it.category == category }
@@ -362,6 +407,7 @@ fun ExpensesScreen(
                 items(uiState.filteredExpenses, key = { it.id }) { expense ->
                     ExpenseItemCard(
                         expense = expense,
+                        onEdit = { expenseToEdit = expense },
                         onDelete = { viewModel.deleteExpense(expense.id) }
                     )
                 }
@@ -370,7 +416,6 @@ fun ExpensesScreen(
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
 
-        // Prominent FAB
         FloatingActionButton(
             onClick = { showAddBottomSheet = true },
             modifier = Modifier
@@ -383,6 +428,55 @@ fun ExpensesScreen(
         }
     }
 
+    if (showEditBudgetDialog) {
+        var budgetInput by remember { mutableStateOf(uiState.monthlyBudget.toInt().toString()) }
+        AlertDialog(
+            onDismissRequest = { showEditBudgetDialog = false },
+            title = {
+                Text(
+                    text = "Edit Monthly Budget",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Set your target monthly spending budget (₹):",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = budgetInput,
+                        onValueChange = { budgetInput = it },
+                        label = { Text("Monthly Budget Target (₹)") },
+                        leadingIcon = { Icon(imageVector = Icons.Rounded.CurrencyRupee, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val newBudget = budgetInput.toDoubleOrNull() ?: 0.0
+                        if (newBudget > 0) {
+                            viewModel.updateMonthlyBudget(newBudget)
+                            showEditBudgetDialog = false
+                        }
+                    }
+                ) {
+                    Text("Save Budget", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditBudgetDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     if (showAddBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showAddBottomSheet = false },
@@ -390,11 +484,35 @@ fun ExpensesScreen(
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = MaterialTheme.colorScheme.surface
         ) {
-            AddExpenseBottomSheetContent(
+            ExpenseFormBottomSheetContent(
+                initialExpense = null,
+                titleText = "Add New Expense",
+                confirmButtonText = "Save Expense",
                 onDismiss = { showAddBottomSheet = false },
                 onConfirm = { title, amount, category, date, note ->
                     viewModel.addExpense(title, amount, category, date, note)
                     showAddBottomSheet = false
+                }
+            )
+        }
+    }
+
+    if (expenseToEdit != null) {
+        ModalBottomSheet(
+            onDismissRequest = { expenseToEdit = null },
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            val exp = expenseToEdit!!
+            ExpenseFormBottomSheetContent(
+                initialExpense = exp,
+                titleText = "Edit Expense",
+                confirmButtonText = "Save Changes",
+                onDismiss = { expenseToEdit = null },
+                onConfirm = { title, amount, category, date, note ->
+                    viewModel.updateExpense(exp.id, title, amount, category, date, note)
+                    expenseToEdit = null
                 }
             )
         }
@@ -404,6 +522,7 @@ fun ExpensesScreen(
 @Composable
 fun ExpenseItemCard(
     expense: Expense,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -476,6 +595,14 @@ fun ExpenseItemCard(
                 color = MaterialTheme.colorScheme.error
             )
 
+            IconButton(onClick = onEdit) {
+                Icon(
+                    imageVector = Icons.Rounded.Edit,
+                    contentDescription = "Edit Expense",
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                )
+            }
+
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
@@ -488,15 +615,18 @@ fun ExpenseItemCard(
 }
 
 @Composable
-fun AddExpenseBottomSheetContent(
+fun ExpenseFormBottomSheetContent(
+    initialExpense: Expense? = null,
+    titleText: String = "Add New Expense",
+    confirmButtonText: String = "Save Expense",
     onDismiss: () -> Unit,
     onConfirm: (title: String, amount: Double, category: ExpenseCategory, date: String, note: String) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(ExpenseCategory.FOOD) }
-    var date by remember { mutableStateOf("Today") }
-    var note by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialExpense?.title ?: "") }
+    var amountText by remember { mutableStateOf(initialExpense?.amount?.let { String.format(Locale.US, "%.2f", it) } ?: "") }
+    var selectedCategory by remember { mutableStateOf(initialExpense?.category ?: ExpenseCategory.FOOD) }
+    var date by remember { mutableStateOf(initialExpense?.date ?: "Today") }
+    var note by remember { mutableStateOf(initialExpense?.note ?: "") }
 
     Column(
         modifier = Modifier
@@ -522,7 +652,7 @@ fun AddExpenseBottomSheetContent(
             }
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = "Add New Expense",
+                text = titleText,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -553,7 +683,6 @@ fun AddExpenseBottomSheetContent(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Category Selector Chips Row with Color Accents
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -645,7 +774,7 @@ fun AddExpenseBottomSheetContent(
                 }
             ) {
                 Text(
-                    text = "Save Expense",
+                    text = confirmButtonText,
                     fontWeight = FontWeight.Bold
                 )
             }

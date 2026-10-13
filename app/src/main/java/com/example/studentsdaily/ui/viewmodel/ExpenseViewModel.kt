@@ -29,8 +29,9 @@ class ExpenseViewModel(
 
     val uiState: StateFlow<ExpenseUiState> = combine(
         repository.expenses,
+        repository.monthlyBudget,
         _selectedCategoryFilter
-    ) { expenses, categoryFilter ->
+    ) { expenses, budget, categoryFilter ->
         val total = expenses.sumOf { it.amount }
         val categoryMap = expenses.groupBy { it.category }
             .mapValues { entry -> entry.value.sumOf { it.amount } }
@@ -45,7 +46,7 @@ class ExpenseViewModel(
             expensesByCategory = categoryMap,
             selectedCategoryFilter = categoryFilter,
             filteredExpenses = filtered,
-            monthlyBudget = 300.00
+            monthlyBudget = budget
         )
     }.stateIn(
         scope = viewModelScope,
@@ -55,6 +56,12 @@ class ExpenseViewModel(
 
     fun setCategoryFilter(category: ExpenseCategory?) {
         _selectedCategoryFilter.value = category
+    }
+
+    fun updateMonthlyBudget(newBudget: Double) {
+        if (newBudget > 0) {
+            repository.updateMonthlyBudget(newBudget)
+        }
     }
 
     fun addExpense(title: String, amount: Double, category: ExpenseCategory, date: String, note: String = "") {
@@ -67,6 +74,19 @@ class ExpenseViewModel(
             note = note.trim()
         )
         repository.addExpense(expense)
+    }
+
+    fun updateExpense(id: String, title: String, amount: Double, category: ExpenseCategory, date: String, note: String = "") {
+        if (title.isBlank() || amount <= 0) return
+        val updated = Expense(
+            id = id,
+            title = title.trim(),
+            amount = amount,
+            category = category,
+            date = date.ifBlank { "Today" },
+            note = note.trim()
+        )
+        repository.updateExpense(updated)
     }
 
     fun deleteExpense(id: String) {

@@ -257,6 +257,33 @@ class SupabaseManager private constructor() {
             }
         }
 
+    suspend fun updateExpense(userId: String, token: String, expense: Expense): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = "${SupabaseConfig.SUPABASE_URL}/rest/v1/expenses?id=eq.${expense.id}&user_id=eq.$userId"
+                val json = JSONObject().apply {
+                    put("title", expense.title)
+                    put("amount", expense.amount)
+                    put("category", expense.category.name)
+                    put("date_string", expense.date)
+                    put("note", expense.note)
+                }
+
+                val request = Request.Builder()
+                    .url(url)
+                    .addHeader("apikey", SupabaseConfig.SUPABASE_PUBLISHABLE_KEY)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Prefer", "return=representation")
+                    .patch(json.toString().toRequestBody(jsonMediaType))
+                    .build()
+
+                val response = client.newCall(request).execute()
+                response.isSuccessful
+            } catch (_: Exception) {
+                false
+            }
+        }
+
     suspend fun deleteExpense(userId: String, token: String, expenseId: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -689,6 +716,32 @@ class SupabaseManager private constructor() {
                     .addHeader("Authorization", "Bearer $token")
                     .addHeader("Prefer", "return=representation")
                     .post(json.toString().toRequestBody(jsonMediaType))
+                    .build()
+
+                val response = client.newCall(request).execute()
+                response.isSuccessful
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+    suspend fun updateNote(userId: String, token: String, note: Note): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = "${SupabaseConfig.SUPABASE_URL}/rest/v1/notes?id=eq.${note.id}&user_id=eq.$userId"
+                val json = JSONObject().apply {
+                    put("title", note.title)
+                    put("content", note.content)
+                    put("date_string", note.dateString)
+                    put("category_tag", note.categoryTag)
+                }
+
+                val request = Request.Builder()
+                    .url(url)
+                    .addHeader("apikey", SupabaseConfig.SUPABASE_PUBLISHABLE_KEY)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Prefer", "return=representation")
+                    .patch(json.toString().toRequestBody(jsonMediaType))
                     .build()
 
                 val response = client.newCall(request).execute()

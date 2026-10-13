@@ -1,6 +1,7 @@
 package com.example.studentsdaily.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
@@ -69,6 +71,7 @@ import com.example.studentsdaily.ui.viewmodel.HabitNoteViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitsNotesScreen(
+    onNoteClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: HabitNoteViewModel = viewModel()
 ) {
@@ -76,11 +79,11 @@ fun HabitsNotesScreen(
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var showAddHabitBottomSheet by remember { mutableStateOf(false) }
     var showAddNoteBottomSheet by remember { mutableStateOf(false) }
+    var noteToEdit by remember { mutableStateOf<Note?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Modern Segmented Switcher / Tab Row
             PrimaryTabRow(
                 selectedTabIndex = selectedTabIndex,
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -113,7 +116,6 @@ fun HabitsNotesScreen(
             }
 
             if (selectedTabIndex == 0) {
-                // Daily Habits View
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -222,7 +224,6 @@ fun HabitsNotesScreen(
                     item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
             } else {
-                // Lecture Notes View
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -276,6 +277,8 @@ fun HabitsNotesScreen(
                         items(uiState.notes, key = { it.id }) { note ->
                             NoteItemCard(
                                 note = note,
+                                onNoteClick = { onNoteClick(note.id) },
+                                onEdit = { noteToEdit = note },
                                 onDelete = { viewModel.deleteNote(note.id) }
                             )
                         }
@@ -325,11 +328,41 @@ fun HabitsNotesScreen(
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = MaterialTheme.colorScheme.surface
         ) {
-            AddNoteBottomSheetContent(
+            NoteFormBottomSheetContent(
+                initialNote = null,
+                headlineText = "Add Lecture Note",
+                confirmButtonText = "Save Note",
                 onDismiss = { showAddNoteBottomSheet = false },
                 onConfirm = { title, content, tag ->
                     viewModel.addNote(title, content, tag)
                     showAddNoteBottomSheet = false
+                }
+            )
+        }
+    }
+
+    if (noteToEdit != null) {
+        ModalBottomSheet(
+            onDismissRequest = { noteToEdit = null },
+            sheetState = sheetState,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            val note = noteToEdit!!
+            NoteFormBottomSheetContent(
+                initialNote = note,
+                headlineText = "Edit Lecture Note",
+                confirmButtonText = "Save Changes",
+                onDismiss = { noteToEdit = null },
+                onConfirm = { title, content, tag ->
+                    viewModel.updateNote(
+                        id = note.id,
+                        title = title,
+                        content = content,
+                        categoryTag = tag,
+                        dateString = note.dateString
+                    )
+                    noteToEdit = null
                 }
             )
         }
@@ -359,7 +392,6 @@ fun HabitItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Big Touch-Target Check-in Toggle Button
                 IconButton(
                     onClick = onToggle,
                     modifier = Modifier.size(42.dp)
@@ -384,7 +416,6 @@ fun HabitItemCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Flame Streak Badge (🔥 X days streak)
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = Color(0xFFFF6D00).copy(alpha = 0.15f)
@@ -429,7 +460,6 @@ fun HabitItemCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Weekly / Goal Progress Indicator Bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -465,10 +495,14 @@ fun HabitItemCard(
 @Composable
 fun NoteItemCard(
     note: Note,
-    onDelete: () -> Unit
+    onNoteClick: () -> Unit = {},
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNoteClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -531,6 +565,14 @@ fun NoteItemCard(
                     }
                 }
 
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Edit Note",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    )
+                }
+
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
@@ -551,7 +593,8 @@ fun NoteItemCard(
                         text = note.content,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier.padding(12.dp),
+                        maxLines = 3
                     )
                 }
             }
@@ -629,13 +672,16 @@ fun AddHabitBottomSheetContent(
 }
 
 @Composable
-fun AddNoteBottomSheetContent(
+fun NoteFormBottomSheetContent(
+    initialNote: Note? = null,
+    headlineText: String = "Add Lecture Note",
+    confirmButtonText: String = "Save Note",
     onDismiss: () -> Unit,
     onConfirm: (title: String, content: String, tag: String) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
-    var tag by remember { mutableStateOf("Lecture") }
+    var title by remember { mutableStateOf(initialNote?.title ?: "") }
+    var content by remember { mutableStateOf(initialNote?.content ?: "") }
+    var tag by remember { mutableStateOf(initialNote?.categoryTag ?: "Lecture") }
 
     Column(
         modifier = Modifier
@@ -645,7 +691,7 @@ fun AddNoteBottomSheetContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "Add Lecture Note",
+            text = headlineText,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -699,7 +745,7 @@ fun AddNoteBottomSheetContent(
                 }
             ) {
                 Text(
-                    text = "Save Note",
+                    text = confirmButtonText,
                     fontWeight = FontWeight.Bold
                 )
             }

@@ -52,7 +52,7 @@ class StudentsDailyRepositoryTest {
     }
 
     @Test
-    fun testExpenseAddAndDelete() {
+    fun testExpenseAddUpdateAndDelete() {
         val initialCount = repository.expenses.value.size
         val newExpense = Expense(
             title = "Test Coffee",
@@ -62,6 +62,12 @@ class StudentsDailyRepositoryTest {
         )
         repository.addExpense(newExpense)
         assertEquals(initialCount + 1, repository.expenses.value.size)
+
+        val updatedExpense = newExpense.copy(title = "Updated Coffee Title", amount = 6.00)
+        repository.updateExpense(updatedExpense)
+        val fetchedExpense = repository.expenses.value.find { it.id == newExpense.id }
+        assertEquals("Updated Coffee Title", fetchedExpense?.title)
+        assertEquals(6.00, fetchedExpense?.amount ?: 0.0, 0.01)
 
         repository.deleteExpense(newExpense.id)
         assertEquals(initialCount, repository.expenses.value.size)
@@ -106,7 +112,7 @@ class StudentsDailyRepositoryTest {
     }
 
     @Test
-    fun testNoteAddAndDelete() {
+    fun testNoteAddUpdateAndDelete() {
         val newNote = Note(
             title = "Test Note Title",
             content = "Test Note Content",
@@ -116,8 +122,23 @@ class StudentsDailyRepositoryTest {
         repository.addNote(newNote)
         assertTrue(repository.notes.value.any { it.id == newNote.id })
 
+        val updatedNote = newNote.copy(title = "Updated Note Title", content = "Updated Note Content")
+        repository.updateNote(updatedNote)
+        val fetchedNote = repository.notes.value.find { it.id == newNote.id }
+        assertEquals("Updated Note Title", fetchedNote?.title)
+        assertEquals("Updated Note Content", fetchedNote?.content)
+
         repository.deleteNote(newNote.id)
         assertFalse(repository.notes.value.any { it.id == newNote.id })
+    }
+
+    @Test
+    fun testMonthlyBudgetUpdate() {
+        repository.updateMonthlyBudget(10000.0)
+        assertEquals(10000.0, repository.monthlyBudget.value, 0.01)
+
+        repository.updateMonthlyBudget(-100.0) // Invalid budget should be ignored
+        assertEquals(10000.0, repository.monthlyBudget.value, 0.01)
     }
 
     @Test

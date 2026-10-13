@@ -58,6 +58,7 @@ import com.example.studentsdaily.ui.screens.ExpensesScreen
 import com.example.studentsdaily.ui.screens.HabitsNotesScreen
 import com.example.studentsdaily.ui.screens.IntroScreen
 import com.example.studentsdaily.ui.screens.LoginScreen
+import com.example.studentsdaily.ui.screens.NoteDetailScreen
 import com.example.studentsdaily.ui.screens.ProfileScreen
 import com.example.studentsdaily.ui.screens.TasksScreen
 import com.example.studentsdaily.ui.screens.TimetableScreen
@@ -332,7 +333,19 @@ fun StudentsDailyMainApp(
                             is ScreenRoute.Expenses -> ExpensesScreen()
                             is ScreenRoute.Timetable -> TimetableScreen()
                             is ScreenRoute.Tasks -> TasksScreen()
-                            is ScreenRoute.HabitsNotes -> HabitsNotesScreen()
+                            is ScreenRoute.HabitsNotes -> HabitsNotesScreen(
+                                onNoteClick = { noteId ->
+                                    backStack.add(ScreenRoute.NoteDetail(noteId))
+                                }
+                            )
+                            is ScreenRoute.NoteDetail -> NoteDetailScreen(
+                                noteId = currentKey.noteId,
+                                onBack = {
+                                    if (backStack.size > 1) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    }
+                                }
+                            )
                             is ScreenRoute.Profile -> ProfileScreen(
                                 onNavigateToLogin = {
                                     if (backStack.size > 1) {

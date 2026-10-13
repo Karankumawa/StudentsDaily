@@ -13,6 +13,17 @@ object AuthPreferences {
     private const val KEY_USER_EMAIL = "user_email"
     private const val KEY_USER_FULL_NAME = "user_full_name"
     private const val KEY_INTRO_COMPLETED = "has_completed_intro"
+    private const val KEY_MONTHLY_BUDGET = "monthly_budget"
+
+    fun getMonthlyBudget(context: Context, defaultBudget: Double = 5000.0): Double {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getFloat(KEY_MONTHLY_BUDGET, defaultBudget.toFloat()).toDouble()
+    }
+
+    fun setMonthlyBudget(context: Context, budget: Double) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit { putFloat(KEY_MONTHLY_BUDGET, budget.toFloat()) }
+    }
 
     fun isIntroCompleted(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
