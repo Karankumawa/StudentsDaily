@@ -6,9 +6,12 @@ import com.example.studentsdaily.data.model.Habit
 import com.example.studentsdaily.data.model.Note
 import com.example.studentsdaily.data.model.Priority
 import com.example.studentsdaily.data.model.TaskItem
+import com.example.studentsdaily.data.remote.SupabaseConfig
+import com.example.studentsdaily.data.repository.AuthUiState
 import com.example.studentsdaily.data.repository.StudentsDailyRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -23,12 +26,29 @@ class StudentsDailyRepositoryTest {
     }
 
     @Test
+    fun testSupabaseConfigConstants() {
+        assertEquals("https://zruqunvowimajlgoyiwb.supabase.co", SupabaseConfig.SUPABASE_URL)
+        assertEquals("sb_publishable_EVf8Ysepkk4njkTCW-EqPw_netwV9Uq", SupabaseConfig.SUPABASE_PUBLISHABLE_KEY)
+        assertEquals("https://zruqunvowimajlgoyiwb.supabase.co/auth/v1/.well-known/jwks.json", SupabaseConfig.SUPABASE_JWKS_URL)
+    }
+
+    @Test
     fun testInitialDataLoaded() {
         assertTrue(repository.expenses.value.isNotEmpty())
         assertTrue(repository.timetableItems.value.isNotEmpty())
         assertTrue(repository.tasks.value.isNotEmpty())
         assertTrue(repository.habits.value.isNotEmpty())
         assertTrue(repository.notes.value.isNotEmpty())
+        assertTrue(repository.isGuestMode.value)
+        assertNull(repository.currentSession.value)
+    }
+
+    @Test
+    fun testSignOutResetsGuestMode() {
+        repository.signOut()
+        assertTrue(repository.isGuestMode.value)
+        assertNull(repository.currentSession.value)
+        assertEquals(AuthUiState.Idle, repository.authUiState.value)
     }
 
     @Test

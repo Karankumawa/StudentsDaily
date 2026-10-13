@@ -14,11 +14,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Login
+import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.School
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,19 +36,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowWidthSizeClass
+import com.example.studentsdaily.data.repository.StudentsDailyRepository
 import com.example.studentsdaily.ui.screens.ExpensesScreen
 import com.example.studentsdaily.ui.screens.HabitsNotesScreen
+import com.example.studentsdaily.ui.screens.LoginScreen
 import com.example.studentsdaily.ui.screens.TasksScreen
 import com.example.studentsdaily.ui.screens.TimetableScreen
 import com.example.studentsdaily.ui.theme.StudentsDailyTheme
@@ -51,6 +64,15 @@ import com.example.studentsdaily.ui.theme.StudentsDailyTheme
 fun StudentsDailyMainApp(
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val repository = remember {
+        StudentsDailyRepository.getInstance().apply {
+            initializeWithContext(context)
+        }
+    }
+
+    val currentSession by repository.currentSession.collectAsState()
+
     // Navigation 3 BackStack
     val backStack = rememberNavBackStack(ScreenRoute.Expenses)
     val currentRoute = backStack.lastOrNull() as? ScreenRoute ?: ScreenRoute.Expenses
@@ -63,6 +85,16 @@ fun StudentsDailyMainApp(
 
     val dateFormatted = remember {
         SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date())
+    }
+
+    val greetingText = remember(currentSession) {
+        val user = currentSession?.user
+        if (user != null) {
+            val name = user.fullName.ifBlank { user.email.substringBefore("@") }
+            "Hello, $name! 🎓"
+        } else {
+            "Hello, Student! 🎓"
+        }
     }
 
     Scaffold(
@@ -91,9 +123,11 @@ fun StudentsDailyMainApp(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column(horizontalAlignment = Alignment.Start) {
                             Text(
-                                text = "Hello, Student! 🎓",
+                                text = greetingText,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "${currentRoute.title} • $dateFormatted",
@@ -101,6 +135,64 @@ fun StudentsDailyMainApp(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
+                    }
+                },
+                actions = {
+                    if (currentSession != null) {
+                        AssistChip(
+                            onClick = {
+                                if (currentRoute != ScreenRoute.Login) {
+                                    backStack.add(ScreenRoute.Login)
+                                }
+                            },
+                            label = {
+                                Text(
+                                    currentSession?.user?.email?.substringBefore("@") ?: "Account",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.AccountCircle,
+                                    contentDescription = "User Profile",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.padding(end = 4.dp),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                        IconButton(
+                            onClick = {
+                                repository.signOut()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.Logout,
+                                contentDescription = "Sign Out",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        AssistChip(
+                            onClick = {
+                                if (currentRoute != ScreenRoute.Login) {
+                                    backStack.add(ScreenRoute.Login)
+                                }
+                            },
+                            label = { Text("Sign In") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.Login,
+                                    contentDescription = "Sign In",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -192,6 +284,22 @@ fun StudentsDailyMainApp(
                             is ScreenRoute.Timetable -> TimetableScreen()
                             is ScreenRoute.Tasks -> TasksScreen()
                             is ScreenRoute.HabitsNotes -> HabitsNotesScreen()
+                            is ScreenRoute.Login -> LoginScreen(
+                                onContinueAsGuest = {
+                                    if (backStack.size > 1) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    } else {
+                                        backStack.add(ScreenRoute.Expenses)
+                                    }
+                                },
+                                onAuthSuccess = {
+                                    if (backStack.size > 1) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    } else {
+                                        backStack.add(ScreenRoute.Expenses)
+                                    }
+                                }
+                            )
                             else -> ExpensesScreen()
                         }
                     }

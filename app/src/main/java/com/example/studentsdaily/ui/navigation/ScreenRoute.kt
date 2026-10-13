@@ -3,6 +3,7 @@ package com.example.studentsdaily.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -38,7 +39,14 @@ sealed interface ScreenRoute : NavKey {
         override val icon: ImageVector = Icons.AutoMirrored.Rounded.Notes
     }
 
+    @Serializable
+    data object Login : ScreenRoute {
+        override val title: String = "Account"
+        override val icon: ImageVector = Icons.Rounded.AccountCircle
+    }
+
     companion object {
-        val ALL: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes)
+        val NAVIGATION_ITEMS: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes)
+        val ALL: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes, Login)
     }
 }
