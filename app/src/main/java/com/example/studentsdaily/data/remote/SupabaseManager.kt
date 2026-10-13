@@ -159,6 +159,32 @@ class SupabaseManager private constructor() {
         }
 
     // =========================================================================
+    // PROFILE OPERATIONS
+    // =========================================================================
+    suspend fun updateProfileName(userId: String, token: String, fullName: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = "${SupabaseConfig.SUPABASE_URL}/rest/v1/profiles?id=eq.$userId"
+                val json = JSONObject().apply {
+                    put("full_name", fullName.trim())
+                }
+
+                val request = Request.Builder()
+                    .url(url)
+                    .addHeader("apikey", SupabaseConfig.SUPABASE_PUBLISHABLE_KEY)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Prefer", "return=representation")
+                    .patch(json.toString().toRequestBody(jsonMediaType))
+                    .build()
+
+                val response = client.newCall(request).execute()
+                response.isSuccessful
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+    // =========================================================================
     // EXPENSES CRUD
     // =========================================================================
     suspend fun fetchExpenses(userId: String, token: String): List<Expense> =

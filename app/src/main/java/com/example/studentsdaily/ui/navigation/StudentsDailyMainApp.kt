@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Login
-import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -55,6 +56,7 @@ import com.example.studentsdaily.data.repository.StudentsDailyRepository
 import com.example.studentsdaily.ui.screens.ExpensesScreen
 import com.example.studentsdaily.ui.screens.HabitsNotesScreen
 import com.example.studentsdaily.ui.screens.LoginScreen
+import com.example.studentsdaily.ui.screens.ProfileScreen
 import com.example.studentsdaily.ui.screens.TasksScreen
 import com.example.studentsdaily.ui.screens.TimetableScreen
 import com.example.studentsdaily.ui.theme.StudentsDailyTheme
@@ -104,7 +106,14 @@ fun StudentsDailyMainApp(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                if (currentRoute != ScreenRoute.Profile) {
+                                    backStack.add(ScreenRoute.Profile)
+                                }
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Box(
                             modifier = Modifier
@@ -141,58 +150,64 @@ fun StudentsDailyMainApp(
                     if (currentSession != null) {
                         AssistChip(
                             onClick = {
-                                if (currentRoute != ScreenRoute.Login) {
-                                    backStack.add(ScreenRoute.Login)
+                                if (currentRoute != ScreenRoute.Profile) {
+                                    backStack.add(ScreenRoute.Profile)
                                 }
                             },
                             label = {
                                 Text(
-                                    currentSession?.user?.email?.substringBefore("@") ?: "Account",
-                                    style = MaterialTheme.typography.labelSmall
+                                    currentSession?.user?.fullName?.ifBlank {
+                                        currentSession?.user?.email?.substringBefore("@")
+                                    } ?: "Profile",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             },
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Rounded.AccountCircle,
+                                    imageVector = Icons.Rounded.Person,
                                     contentDescription = "User Profile",
                                     modifier = Modifier.size(16.dp)
                                 )
                             },
                             shape = RoundedCornerShape(20.dp),
-                            modifier = Modifier.padding(end = 4.dp),
+                            modifier = Modifier.padding(end = 8.dp),
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer
                             )
                         )
-                        IconButton(
-                            onClick = {
-                                repository.signOut()
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.Logout,
-                                contentDescription = "Sign Out",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
                     } else {
                         AssistChip(
                             onClick = {
-                                if (currentRoute != ScreenRoute.Login) {
-                                    backStack.add(ScreenRoute.Login)
+                                if (currentRoute != ScreenRoute.Profile) {
+                                    backStack.add(ScreenRoute.Profile)
                                 }
                             },
-                            label = { Text("Sign In") },
+                            label = { Text("Profile") },
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.Login,
-                                    contentDescription = "Sign In",
+                                    imageVector = Icons.Rounded.AccountCircle,
+                                    contentDescription = "Profile",
                                     modifier = Modifier.size(16.dp)
                                 )
                             },
                             shape = RoundedCornerShape(20.dp),
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 4.dp)
                         )
+                        IconButton(
+                            onClick = {
+                                if (currentRoute != ScreenRoute.Login) {
+                                    backStack.add(ScreenRoute.Login)
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.Login,
+                                contentDescription = "Sign In",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -205,7 +220,7 @@ fun StudentsDailyMainApp(
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface
                 ) {
-                    ScreenRoute.ALL.forEach { route ->
+                    ScreenRoute.NAVIGATION_ITEMS.forEach { route ->
                         NavigationBarItem(
                             selected = currentRoute == route,
                             onClick = {
@@ -244,7 +259,7 @@ fun StudentsDailyMainApp(
                     containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
-                    ScreenRoute.ALL.forEach { route ->
+                    ScreenRoute.NAVIGATION_ITEMS.forEach { route ->
                         NavigationRailItem(
                             selected = currentRoute == route,
                             onClick = {
@@ -284,6 +299,14 @@ fun StudentsDailyMainApp(
                             is ScreenRoute.Timetable -> TimetableScreen()
                             is ScreenRoute.Tasks -> TasksScreen()
                             is ScreenRoute.HabitsNotes -> HabitsNotesScreen()
+                            is ScreenRoute.Profile -> ProfileScreen(
+                                onNavigateToLogin = {
+                                    if (backStack.size > 1) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    }
+                                    backStack.add(ScreenRoute.Login)
+                                }
+                            )
                             is ScreenRoute.Login -> LoginScreen(
                                 onContinueAsGuest = {
                                     if (backStack.size > 1) {
@@ -295,9 +318,8 @@ fun StudentsDailyMainApp(
                                 onAuthSuccess = {
                                     if (backStack.size > 1) {
                                         backStack.removeAt(backStack.size - 1)
-                                    } else {
-                                        backStack.add(ScreenRoute.Expenses)
                                     }
+                                    backStack.add(ScreenRoute.Profile)
                                 }
                             )
                             else -> ExpensesScreen()

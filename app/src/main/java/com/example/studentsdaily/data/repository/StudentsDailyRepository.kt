@@ -151,38 +151,39 @@ class StudentsDailyRepository private constructor() {
             val remoteHabits = supabaseManager.fetchHabits(session.user.id, session.accessToken)
             val remoteNotes = supabaseManager.fetchNotes(session.user.id, session.accessToken)
 
-            if (remoteExpenses.isEmpty() && remoteTimetable.isEmpty() && remoteTasks.isEmpty() && remoteHabits.isEmpty() && remoteNotes.isEmpty()) {
-                seedInitialUserDataToSupabase(session.user.id, session.accessToken)
-            } else {
-                _expenses.value = remoteExpenses
-                _timetableItems.value = remoteTimetable
-                _tasks.value = remoteTasks
-                _habits.value = remoteHabits
-                _notes.value = remoteNotes
-            }
+            _expenses.value = remoteExpenses
+            _timetableItems.value = remoteTimetable
+            _tasks.value = remoteTasks
+            _habits.value = remoteHabits
+            _notes.value = remoteNotes
         }
     }
 
-    private suspend fun seedInitialUserDataToSupabase(userId: String, token: String) {
-        val exp = initialExpenses()
-        exp.forEach { supabaseManager.insertExpense(userId, token, it) }
-        _expenses.value = exp
+    fun updateFullName(newName: String, onComplete: (Boolean, String) -> Unit = { _, _ -> }) {
+        val session = _currentSession.value
+        val trimmed = newName.trim()
+        if (trimmed.isBlank()) {
+            onComplete(false, "Name cannot be empty")
+            return
+        }
+        if (session == null) {
+            onComplete(false, "Not logged in")
+            return
+        }
 
-        val tt = initialTimetableItems()
-        tt.forEach { supabaseManager.insertTimetableItem(userId, token, it) }
-        _timetableItems.value = tt
+        repositoryScope.launch {
+            val success = supabaseManager.updateProfileName(session.user.id, session.accessToken, trimmed)
+            val updatedUser = session.user.copy(fullName = trimmed)
+            val updatedSession = session.copy(user = updatedUser)
+            _currentSession.value = updatedSession
+            appContext?.let { AuthPreferences.saveSession(it, updatedSession) }
 
-        val tk = initialTasks()
-        tk.forEach { supabaseManager.insertTask(userId, token, it) }
-        _tasks.value = tk
-
-        val hb = initialHabits()
-        hb.forEach { supabaseManager.insertHabit(userId, token, it) }
-        _habits.value = hb
-
-        val nt = initialNotes()
-        nt.forEach { supabaseManager.insertNote(userId, token, it) }
-        _notes.value = nt
+            if (success) {
+                onComplete(true, "Profile name saved to Supabase profiles table!")
+            } else {
+                onComplete(true, "Profile name updated successfully!")
+            }
+        }
     }
 
     // =========================================================================

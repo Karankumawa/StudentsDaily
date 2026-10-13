@@ -311,22 +311,47 @@ fun ExpensesScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
-                        )
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
+                                .padding(28.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = if (uiState.selectedCategoryFilter != null)
-                                    "No expenses found in ${uiState.selectedCategoryFilter?.categoryName}."
+                                    "No expenses found in ${uiState.selectedCategoryFilter?.categoryName}"
                                 else
-                                    "No expenses recorded yet. Tap + to add one!",
+                                    "No expenses recorded yet",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (uiState.selectedCategoryFilter != null)
+                                    "Try clearing or changing your category filter."
+                                else
+                                    "Tap + to add your first expense!",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

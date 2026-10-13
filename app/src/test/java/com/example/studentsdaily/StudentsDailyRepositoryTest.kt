@@ -119,4 +119,34 @@ class StudentsDailyRepositoryTest {
         repository.deleteNote(newNote.id)
         assertFalse(repository.notes.value.any { it.id == newNote.id })
     }
+
+    @Test
+    fun testUpdateFullNameNotLoggedIn() {
+        var called = false
+        var successResult = true
+        var messageResult = ""
+        repository.updateFullName("New Name") { success, message ->
+            called = true
+            successResult = success
+            messageResult = message
+        }
+        assertTrue(called)
+        assertFalse(successResult)
+        assertEquals("Not logged in", messageResult)
+    }
+
+    @Test
+    fun testUpdateFullNameEmptyString() {
+        var called = false
+        var successResult = true
+        var messageResult = ""
+        repository.updateFullName("   ") { success, message ->
+            called = true
+            successResult = success
+            messageResult = message
+        }
+        assertTrue(called)
+        assertFalse(successResult)
+        assertEquals("Name cannot be empty", messageResult)
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.studentsdaily.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -211,20 +212,46 @@ fun TasksScreen(
             if (uiState.filteredTasks.isEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = when (uiState.filter) {
-                                TaskFilter.COMPLETED -> "No completed tasks yet."
-                                TaskFilter.PENDING -> "No pending tasks! All caught up!"
-                                else -> "No tasks added yet. Tap + to add a task!"
+                                TaskFilter.COMPLETED -> "No completed tasks yet"
+                                TaskFilter.PENDING -> "No pending tasks!"
+                                else -> "No tasks added yet"
+                            },
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = when (uiState.filter) {
+                                TaskFilter.COMPLETED -> "Complete pending tasks to see them listed here."
+                                TaskFilter.PENDING -> "All caught up! Great job staying on track."
+                                else -> "Tap + to add your first task!"
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant

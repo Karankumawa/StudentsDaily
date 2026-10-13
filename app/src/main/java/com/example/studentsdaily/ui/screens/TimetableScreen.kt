@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -148,18 +149,41 @@ fun TimetableScreen(
             if (uiState.filteredItems.isEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Schedule,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = if (uiState.selectedDay == "All") "No schedule items added yet. Tap + to add one!"
-                            else "No classes or deadlines scheduled for ${uiState.selectedDay}. Enjoy your day!",
+                            text = if (uiState.selectedDay == "All") "No schedule items added yet"
+                            else "No classes scheduled for ${uiState.selectedDay}",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (uiState.selectedDay == "All") "Tap + to add your first class or deadline!"
+                            else "No classes or deadlines scheduled for ${uiState.selectedDay}. Tap + to add one!",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

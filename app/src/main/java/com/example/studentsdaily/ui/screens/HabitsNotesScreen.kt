@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Note
+import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -169,17 +170,39 @@ fun HabitsNotesScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                             ) {
-                                Box(
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
+                                        .padding(28.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.EmojiEvents,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
                                     Text(
-                                        text = "No habits tracked yet. Tap + to start a habit!",
+                                        text = "No habits tracked yet",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Tap + to start tracking your first daily habit!",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -210,17 +233,39 @@ fun HabitsNotesScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                             ) {
-                                Box(
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
+                                        .padding(28.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Rounded.Notes,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
                                     Text(
-                                        text = "No lecture notes created yet. Tap + to create one!",
+                                        text = "No lecture notes created yet",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Tap + to create your first lecture note!",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
