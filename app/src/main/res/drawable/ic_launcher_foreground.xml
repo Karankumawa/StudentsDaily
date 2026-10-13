@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Graduation Cap Top Rhombus -->
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M54,22 L78,32 L54,42 L30,32 Z" />
+
+    <!-- Graduation Cap Under Ring -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M40,37 L40,46 C40,51 68,51 68,46 L68,37 Z" />
+
+    <!-- Cap Tassel Strand & Button -->
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M54,30 A2,2 0 1,0 54,26 A2,2 0 1,0 54,30 Z" />
+    <path
+        android:strokeWidth="1.8"
+        android:strokeColor="#14532D"
+        android:pathData="M54,28 L72,36 L72,46" />
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M72,48 A2.5,2.5 0 1,0 72,43 A2.5,2.5 0 1,0 72,48 Z" />
+
+    <!-- Notebook / Ledger Base Shield -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,50 L74,50 C76.2,50 78,51.8 78,54 L78,78 C78,80.2 76.2,82 74,82 L34,82 C31.8,82 30,80.2 30,78 L30,54 C30,51.8 31.8,50 34,50 Z" />
+
+    <!-- Notebook Left Accent Spine -->
+    <path
+        android:fillColor="#A7F3D0"
+        android:pathData="M30,54 C30,51.8 31.8,50 34,50 L38,50 L38,82 L34,82 C31.8,82 30,80.2 30,78 Z" />
+
+    <!-- Notebook Page Lines -->
+    <path
+        android:strokeWidth="1.5"
+        android:strokeColor="#A7F3D0"
+        android:strokeLineCap="round"
+        android:pathData="M42,56 L54,56 M42,62 L52,62 M42,68 L50,68" />
+
+    <!-- Financial Coin Badge Overlapping Right -->
+    <path
+        android:fillColor="#14532D"
+        android:pathData="M66,66 A11,11 0 1,0 66,44 A11,11 0 1,0 66,66 Z" />
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M66,64 A9,9 0 1,0 66,46 A9,9 0 1,0 66,64 Z" />
+
+    <!-- Dollar Symbol inside Coin Badge -->
+    <path
+        android:fillColor="#DCFCE7"
+        android:pathData="M66.5,49 L65.5,49 M66,48 L66,62 M67.5,51 C64.5,50.5 63.5,53.5 66,54.5 C68.5,55.5 67.5,59.5 64.5,58.5"
+        android:strokeWidth="1.8"
+        android:strokeColor="#DCFCE7"
+        android:strokeLineCap="round" />
+</vector>

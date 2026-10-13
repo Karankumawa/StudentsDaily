@@ -1,0 +1,44 @@
+package com.example.studentsdaily.ui.navigation
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Notes
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed interface ScreenRoute : NavKey {
+    val title: String
+    val icon: ImageVector
+
+    @Serializable
+    data object Expenses : ScreenRoute {
+        override val title: String = "Expenses"
+        override val icon: ImageVector = Icons.AutoMirrored.Rounded.ReceiptLong
+    }
+
+    @Serializable
+    data object Timetable : ScreenRoute {
+        override val title: String = "Timetable"
+        override val icon: ImageVector = Icons.Rounded.CalendarToday
+    }
+
+    @Serializable
+    data object Tasks : ScreenRoute {
+        override val title: String = "Tasks"
+        override val icon: ImageVector = Icons.Rounded.CheckCircle
+    }
+
+    @Serializable
+    data object HabitsNotes : ScreenRoute {
+        override val title: String = "Habits & Notes"
+        override val icon: ImageVector = Icons.AutoMirrored.Rounded.Notes
+    }
+
+    companion object {
+        val ALL: List<ScreenRoute> = listOf(Expenses, Timetable, Tasks, HabitsNotes)
+    }
+}
