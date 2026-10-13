@@ -277,7 +277,7 @@ fun ProfileScreen(
                     modifier = Modifier.weight(1f),
                     title = "Expenses Logged",
                     value = "${uiState.totalExpensesCount}",
-                    subText = "$${String.format(Locale.US, "%.2f", uiState.totalExpensesAmount)} spent",
+                    subText = "₹${String.format(Locale.US, "%.2f", uiState.totalExpensesAmount)} spent",
                     icon = Icons.AutoMirrored.Rounded.ReceiptLong,
                     iconTint = Color(0xFF10B981)
                 )

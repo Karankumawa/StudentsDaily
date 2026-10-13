@@ -23,9 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AttachMoney
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Category
+import androidx.compose.material.icons.rounded.CurrencyRupee
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.FilterList
@@ -148,7 +148,7 @@ fun ExpensesScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "$${String.format(Locale.US, "%.2f", uiState.totalExpenseAmount)}",
+                                text = "₹${String.format(Locale.US, "%.2f", uiState.totalExpenseAmount)}",
                                 style = MaterialTheme.typography.displayMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White
@@ -167,7 +167,7 @@ fun ExpensesScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Monthly Budget: $${String.format(Locale.US, "%.2f", uiState.monthlyBudget)}",
+                                    text = "Monthly Budget: ₹${String.format(Locale.US, "%.2f", uiState.monthlyBudget)}",
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                                     color = Color(0xFFDCFCE7)
                                 )
@@ -214,7 +214,7 @@ fun ExpensesScreen(
                                         color = Color(0xFFDCFCE7)
                                     )
                                     Text(
-                                        text = "$${String.format(Locale.US, "%.2f", dailyAvgSpent)} / day",
+                                        text = "₹${String.format(Locale.US, "%.2f", dailyAvgSpent)} / day",
                                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                         color = Color.White
                                     )
@@ -471,7 +471,7 @@ fun ExpenseItemCard(
             }
 
             Text(
-                text = "-$${String.format(Locale.US, "%.2f", expense.amount)}",
+                text = "-₹${String.format(Locale.US, "%.2f", expense.amount)}",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                 color = MaterialTheme.colorScheme.error
             )
@@ -543,10 +543,10 @@ fun AddExpenseBottomSheetContent(
         OutlinedTextField(
             value = amountText,
             onValueChange = { amountText = it },
-            label = { Text("Amount ($)") },
+            label = { Text("Amount (₹)") },
             placeholder = { Text("0.00") },
             leadingIcon = {
-                Icon(imageVector = Icons.Rounded.AttachMoney, contentDescription = null)
+                Icon(imageVector = Icons.Rounded.CurrencyRupee, contentDescription = null)
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,

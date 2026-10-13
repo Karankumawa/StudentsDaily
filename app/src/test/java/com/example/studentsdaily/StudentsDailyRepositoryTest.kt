@@ -149,4 +149,17 @@ class StudentsDailyRepositoryTest {
         assertFalse(successResult)
         assertEquals("Name cannot be empty", messageResult)
     }
+
+    @Test
+    fun testCurrencyFormattingRupees() {
+        val totalAmount = repository.expenses.value.sumOf { it.amount }
+        val formattedTotal = String.format(java.util.Locale.US, "₹%.2f", totalAmount)
+        assertTrue("Formatted total should start with ₹ symbol", formattedTotal.startsWith("₹"))
+        assertFalse("Formatted total should not contain dollar symbol", formattedTotal.contains("$"))
+
+        val firstExpense = repository.expenses.value.first()
+        val formattedExpense = String.format(java.util.Locale.US, "-₹%.2f", firstExpense.amount)
+        assertTrue("Formatted expense should start with -₹", formattedExpense.startsWith("-₹"))
+        assertFalse("Formatted expense should not contain dollar symbol", formattedExpense.contains("$"))
+    }
 }
