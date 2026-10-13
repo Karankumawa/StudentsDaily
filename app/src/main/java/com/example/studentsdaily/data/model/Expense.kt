@@ -8,5 +8,6 @@ data class Expense(
     val amount: Double,
     val category: ExpenseCategory,
     val date: String,
-    val note: String = ""
+    val note: String = "",
+    val timestamp: Long = System.currentTimeMillis()
 )

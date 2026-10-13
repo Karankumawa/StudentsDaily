@@ -381,12 +381,12 @@ class StudentsDailyRepository private constructor() {
         }
 
         private fun initialExpenses(): List<Expense> = listOf(
-            Expense(title = "Campus Cafeteria Lunch", amount = 12.50, category = ExpenseCategory.FOOD, date = "2025-03-01", note = "Burger and juice"),
-            Expense(title = "Monthly Bus Pass", amount = 25.00, category = ExpenseCategory.TRANSPORT, date = "2025-03-01", note = "Student discount applied"),
-            Expense(title = "Data Structures Textbook", amount = 65.00, category = ExpenseCategory.ACADEMIC, date = "2025-02-28", note = "Required for CS101"),
-            Expense(title = "Weekend Movie Ticket", amount = 14.00, category = ExpenseCategory.ENTERTAINMENT, date = "2025-02-27", note = "IMAX screen"),
-            Expense(title = "Campus Gym Pass", amount = 20.00, category = ExpenseCategory.HEALTH, date = "2025-02-25", note = "Monthly membership"),
-            Expense(title = "Dorm Printing & Wi-Fi", amount = 15.00, category = ExpenseCategory.UTILITIES, date = "2025-02-20", note = "Printing credits")
+            Expense(title = "Campus Cafeteria Lunch", amount = 125.00, category = ExpenseCategory.FOOD, date = "Today", note = "Thali and juice", timestamp = System.currentTimeMillis()),
+            Expense(title = "Monthly Bus Pass", amount = 250.00, category = ExpenseCategory.TRANSPORT, date = "Yesterday", note = "Student pass renewed", timestamp = System.currentTimeMillis() - 86400000L),
+            Expense(title = "Data Structures Textbook", amount = 450.00, category = ExpenseCategory.ACADEMIC, date = "18 May 2025", note = "Required for CS101", timestamp = System.currentTimeMillis() - 172800000L),
+            Expense(title = "Weekend Movie Ticket", amount = 300.00, category = ExpenseCategory.ENTERTAINMENT, date = "15 May 2025", note = "IMAX ticket", timestamp = System.currentTimeMillis() - 432000000L),
+            Expense(title = "Campus Gym Pass", amount = 500.00, category = ExpenseCategory.HEALTH, date = "10 May 2025", note = "Monthly membership", timestamp = System.currentTimeMillis() - 864000000L),
+            Expense(title = "Dorm Printing & Wi-Fi", amount = 150.00, category = ExpenseCategory.UTILITIES, date = "05 May 2025", note = "Printing credits", timestamp = System.currentTimeMillis() - 1296000000L)
         )
 
         private fun initialTimetableItems(): List<TimetableItem> = listOf(

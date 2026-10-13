@@ -1,7 +1,11 @@
 package com.example.studentsdaily.ui.screens
 
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -26,14 +30,18 @@ import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Category
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CurrencyRupee
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +54,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,6 +72,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -272,6 +282,46 @@ fun ExpensesScreen(
                 }
             }
 
+            // Quick Search Bar
+            item {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Search by title, note, or category...") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = "Search Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingIcon = {
+                        AnimatedVisibility(
+                            visible = uiState.searchQuery.isNotEmpty(),
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "Clear Search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                    )
+                )
+            }
+
             item {
                 // Category Chips Row
                 Column {
@@ -344,12 +394,45 @@ fun ExpensesScreen(
                 }
             }
 
+            // Section Header: "Recent Transactions" with Badge
             item {
-                Text(
-                    text = "Recent Transactions",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Recent Transactions",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ) {
+                            Text(
+                                text = "${uiState.filteredExpenses.size} ${if (uiState.filteredExpenses.size == 1) "item" else "items"}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+
+                    if (uiState.selectedCategoryFilter != null || uiState.searchQuery.isNotEmpty()) {
+                        TextButton(
+                            onClick = { viewModel.clearFilters() }
+                        ) {
+                            Text(
+                                text = "Clear filters",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
 
             if (uiState.filteredExpenses.isEmpty()) {
@@ -360,7 +443,7 @@ fun ExpensesScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -370,36 +453,62 @@ fun ExpensesScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(56.dp)
+                                    .size(64.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
+                                    imageVector = if (uiState.searchQuery.isNotEmpty()) Icons.Rounded.SearchOff else Icons.AutoMirrored.Rounded.ReceiptLong,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(28.dp)
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = if (uiState.selectedCategoryFilter != null)
-                                    "No expenses found in ${uiState.selectedCategoryFilter?.categoryName}"
-                                else
-                                    "No expenses recorded yet",
+                                text = when {
+                                    uiState.searchQuery.isNotEmpty() -> "No results for \"${uiState.searchQuery}\""
+                                    uiState.selectedCategoryFilter != null -> "No expenses in ${uiState.selectedCategoryFilter?.categoryName}"
+                                    else -> "No transactions found"
+                                },
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = if (uiState.selectedCategoryFilter != null)
-                                    "Try clearing or changing your category filter."
-                                else
-                                    "Tap + to add your first expense!",
+                                text = when {
+                                    uiState.searchQuery.isNotEmpty() || uiState.selectedCategoryFilter != null ->
+                                        "Try clearing your search or changing the category filter."
+                                    else ->
+                                        "No transactions found. Tap + to record an expense."
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            if (uiState.searchQuery.isNotEmpty() || uiState.selectedCategoryFilter != null) {
+                                Button(
+                                    onClick = { viewModel.clearFilters() },
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text("Clear Search & Filters", fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                Button(
+                                    onClick = { showAddBottomSheet = true },
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Add New Expense", fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }
@@ -525,9 +634,13 @@ fun ExpenseItemCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val displayDate = remember(expense.date, expense.timestamp) {
+        formatExpenseDisplayDate(expense.date, expense.timestamp)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -537,9 +650,10 @@ fun ExpenseItemCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Distinct category circular icon badge with soft background tint
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(52.dp)
                     .clip(CircleShape)
                     .background(expense.category.color.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
@@ -548,26 +662,36 @@ fun ExpenseItemCard(
                     imageVector = expense.category.icon,
                     contentDescription = expense.category.categoryName,
                     tint = expense.category.color,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                // Bold title
                 Text(
                     text = expense.title,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                // Optional note snippet in muted subtitle text
                 if (expense.note.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = expense.note,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),
@@ -580,35 +704,74 @@ fun ExpenseItemCard(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
+
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = expense.date,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.CalendarToday,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = displayDate,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
-            Text(
-                text = "-₹${String.format(Locale.US, "%.2f", expense.amount)}",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                color = MaterialTheme.colorScheme.error
-            )
+            Spacer(modifier = Modifier.width(8.dp))
 
-            IconButton(onClick = onEdit) {
-                Icon(
-                    imageVector = Icons.Rounded.Edit,
-                    contentDescription = "Edit Expense",
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+            Column(horizontalAlignment = Alignment.End) {
+                // Formatted amount on the right in bold red/emerald text
+                Text(
+                    text = "-₹${String.format(Locale.US, "%.2f", expense.amount)}",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    color = Color(0xFFDC2626) // Distinct dark red
                 )
-            }
 
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Rounded.Delete,
-                    contentDescription = "Delete Expense",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Well-spaced Edit and Delete action buttons
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                    ) {
+                        IconButton(
+                            onClick = onEdit,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Edit,
+                                contentDescription = "Edit Expense",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                    ) {
+                        IconButton(
+                            onClick = onDelete,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Delete,
+                                contentDescription = "Delete Expense",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -742,17 +905,47 @@ fun ExpenseFormBottomSheetContent(
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(
-            value = date,
-            onValueChange = { date = it },
-            label = { Text("Date") },
-            placeholder = { Text("Today or YYYY-MM-DD") },
-            leadingIcon = {
-                Icon(imageVector = Icons.Rounded.CalendarToday, contentDescription = null)
-            },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Column {
+            OutlinedTextField(
+                value = date,
+                onValueChange = { date = it },
+                label = { Text("Date") },
+                placeholder = { Text("Today, Yesterday, or YYYY-MM-DD") },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Rounded.CalendarToday, contentDescription = null)
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { date = "Today" },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (date.equals("Today", ignoreCase = true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (date.equals("Today", ignoreCase = true)) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("Today", style = MaterialTheme.typography.labelSmall)
+                }
+
+                Button(
+                    onClick = { date = "Yesterday" },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (date.equals("Yesterday", ignoreCase = true)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (date.equals("Yesterday", ignoreCase = true)) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("Yesterday", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
 
         Row(
             modifier = Modifier
@@ -780,6 +973,28 @@ fun ExpenseFormBottomSheetContent(
             }
         }
     }
+}
+
+fun formatExpenseDisplayDate(dateStr: String, timestamp: Long = 0L): String {
+    val trimmed = dateStr.trim()
+    if (trimmed.equals("Today", ignoreCase = true)) return "Today"
+    if (trimmed.equals("Yesterday", ignoreCase = true)) return "Yesterday"
+
+    val millis = ExpenseViewModel.parseExpenseTimestamp(trimmed, timestamp)
+    val expenseCal = Calendar.getInstance().apply { timeInMillis = millis }
+    val todayCal = Calendar.getInstance()
+    val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+
+    return when {
+        isSameDay(expenseCal, todayCal) -> "Today"
+        isSameDay(expenseCal, yesterdayCal) -> "Yesterday"
+        else -> SimpleDateFormat("dd MMM yyyy", Locale.US).format(expenseCal.time)
+    }
+}
+
+private fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
+    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 }
 
 @Preview(showBackground = true)
