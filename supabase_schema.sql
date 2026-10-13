@@ -186,3 +186,10 @@ CREATE POLICY "Users can view own notes" ON public.notes FOR SELECT USING (auth.
 CREATE POLICY "Users can insert own notes" ON public.notes FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own notes" ON public.notes FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own notes" ON public.notes FOR DELETE USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- 9. HELPER SQL FOR TESTING (OPTIONAL)
+-- ============================================================================
+
+-- Optional: Auto-confirm all registered emails for testing without email verification
+UPDATE auth.users SET email_confirmed_at = NOW() WHERE email_confirmed_at IS NULL;

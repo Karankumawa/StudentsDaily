@@ -31,7 +31,7 @@ data class SupabaseSession(
 )
 
 sealed interface SupabaseAuthResult {
-    data class Success(val session: SupabaseSession) : SupabaseAuthResult
+    data class Success(val session: SupabaseSession?, val message: String = "") : SupabaseAuthResult
     data class Error(val message: String) : SupabaseAuthResult
 }
 
@@ -71,7 +71,7 @@ class SupabaseManager private constructor() {
                     val jsonObj = JSONObject(responseBody)
                     val accessToken = jsonObj.optString("access_token", "")
                     val refreshToken = jsonObj.optString("refresh_token", "")
-                    val userObj = jsonObj.optJSONObject("user")
+                    val userObj = jsonObj.optJSONObject("user") ?: jsonObj
 
                     if (userObj != null) {
                         val userId = userObj.optString("id", "")
@@ -79,26 +79,23 @@ class SupabaseManager private constructor() {
                         val metadata = userObj.optJSONObject("user_metadata")
                         val metaName = metadata?.optString("full_name", fullName) ?: fullName
 
-                        val user = SupabaseUser(id = userId, email = userEmail, fullName = metaName)
+                        val confirmedAt = if (userObj.isNull("confirmed_at")) "" else userObj.optString("confirmed_at", "")
+                        val emailConfirmedAt = if (userObj.isNull("email_confirmed_at")) "" else userObj.optString("email_confirmed_at", "")
 
-                        if (accessToken.isNotBlank()) {
-                            val session = SupabaseSession(accessToken = accessToken, refreshToken = refreshToken, user = user)
-                            SupabaseAuthResult.Success(session)
+                        val isConfirmationRequired = (confirmedAt.isBlank() && emailConfirmedAt.isBlank()) || accessToken.isBlank()
+
+                        if (isConfirmationRequired) {
+                            SupabaseAuthResult.Success(
+                                session = null,
+                                message = "Account created! A confirmation email has been sent to your address. Please confirm it before logging in."
+                            )
                         } else {
-                            // Account created, email confirmation might be needed or sign-in required
-                            // Attempt immediate login
-                            val loginRes = signIn(email, password)
-                            if (loginRes is SupabaseAuthResult.Success) {
-                                loginRes
-                            } else {
-                                SupabaseAuthResult.Success(
-                                    SupabaseSession(
-                                        accessToken = "signup_pending_token",
-                                        refreshToken = "",
-                                        user = user
-                                    )
-                                )
-                            }
+                            val user = SupabaseUser(id = userId, email = userEmail, fullName = metaName)
+                            val session = SupabaseSession(accessToken = accessToken, refreshToken = refreshToken, user = user)
+                            SupabaseAuthResult.Success(
+                                session = session,
+                                message = "Account created successfully!"
+                            )
                         }
                     } else {
                         SupabaseAuthResult.Error("Sign up succeeded but user profile was empty.")
@@ -145,9 +142,15 @@ class SupabaseManager private constructor() {
                     val user = SupabaseUser(id = userId, email = userEmail, fullName = metaName)
                     val session = SupabaseSession(accessToken = accessToken, refreshToken = refreshToken, user = user)
 
-                    SupabaseAuthResult.Success(session)
+                    SupabaseAuthResult.Success(session = session, message = "Sign in successful!")
                 } else {
-                    val errorMsg = parseErrorMessage(responseBody)
+                    val isUnconfirmed = responseBody.contains("email_not_confirmed", ignoreCase = true) ||
+                            responseBody.contains("email not confirmed", ignoreCase = true)
+                    val errorMsg = if (isUnconfirmed) {
+                        "Email not confirmed. Please check your email inbox or disable 'Confirm email' in Supabase Auth Dashboard."
+                    } else {
+                        parseErrorMessage(responseBody)
+                    }
                     SupabaseAuthResult.Error(errorMsg)
                 }
             } catch (e: Exception) {
@@ -690,14 +693,31 @@ class SupabaseManager private constructor() {
     private fun parseErrorMessage(responseBody: String): String {
         return try {
             val json = JSONObject(responseBody)
-            when {
+            val rawMsg = when {
                 json.has("error_description") -> json.getString("error_description")
                 json.has("msg") -> json.getString("msg")
                 json.has("message") -> json.getString("message")
+                json.has("error") -> json.getString("error")
                 else -> "Supabase request failed."
             }
+            if (rawMsg.contains("email not confirmed", ignoreCase = true) ||
+                rawMsg.contains("email_not_confirmed", ignoreCase = true) ||
+                responseBody.contains("email_not_confirmed", ignoreCase = true)
+            ) {
+                "Email not confirmed. Please check your email inbox or disable 'Confirm email' in Supabase Auth Dashboard."
+            } else {
+                rawMsg
+            }
         } catch (_: Exception) {
-            if (responseBody.isNotBlank()) responseBody else "Unknown Supabase error."
+            if (responseBody.contains("email_not_confirmed", ignoreCase = true) ||
+                responseBody.contains("email not confirmed", ignoreCase = true)
+            ) {
+                "Email not confirmed. Please check your email inbox or disable 'Confirm email' in Supabase Auth Dashboard."
+            } else if (responseBody.isNotBlank()) {
+                responseBody
+            } else {
+                "Unknown Supabase error."
+            }
         }
     }
 

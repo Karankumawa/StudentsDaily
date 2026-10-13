@@ -80,11 +80,19 @@ class StudentsDailyRepository private constructor() {
             when (val result = supabaseManager.signUp(email, password, fullName)) {
                 is SupabaseAuthResult.Success -> {
                     val session = result.session
-                    _currentSession.value = session
-                    _isGuestMode.value = false
-                    appContext?.let { AuthPreferences.saveSession(it, session) }
-                    _authUiState.value = AuthUiState.Success("Account created successfully!")
-                    refreshUserDataFromSupabase()
+                    if (session != null) {
+                        _currentSession.value = session
+                        _isGuestMode.value = false
+                        appContext?.let { AuthPreferences.saveSession(it, session) }
+                        _authUiState.value = AuthUiState.Success(result.message.ifBlank { "Account created successfully!" })
+                        refreshUserDataFromSupabase()
+                    } else {
+                        _authUiState.value = AuthUiState.Success(
+                            result.message.ifBlank {
+                                "Account created! A confirmation email has been sent to your address. Please confirm it before logging in."
+                            }
+                        )
+                    }
                 }
                 is SupabaseAuthResult.Error -> {
                     _authUiState.value = AuthUiState.Error(result.message)
@@ -99,11 +107,15 @@ class StudentsDailyRepository private constructor() {
             when (val result = supabaseManager.signIn(email, password)) {
                 is SupabaseAuthResult.Success -> {
                     val session = result.session
-                    _currentSession.value = session
-                    _isGuestMode.value = false
-                    appContext?.let { AuthPreferences.saveSession(it, session) }
-                    _authUiState.value = AuthUiState.Success("Welcome back, ${session.user.fullName.ifBlank { session.user.email }}!")
-                    refreshUserDataFromSupabase()
+                    if (session != null) {
+                        _currentSession.value = session
+                        _isGuestMode.value = false
+                        appContext?.let { AuthPreferences.saveSession(it, session) }
+                        _authUiState.value = AuthUiState.Success("Welcome back, ${session.user.fullName.ifBlank { session.user.email }}!")
+                        refreshUserDataFromSupabase()
+                    } else {
+                        _authUiState.value = AuthUiState.Error("Session unavailable.")
+                    }
                 }
                 is SupabaseAuthResult.Error -> {
                     _authUiState.value = AuthUiState.Error(result.message)

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.CloudSync
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.School
@@ -72,8 +73,8 @@ fun LoginScreen(
     val authState by repository.authUiState.collectAsState()
     val currentSession by repository.currentSession.collectAsState()
 
-    androidx.compose.runtime.LaunchedEffect(authState) {
-        if (authState is AuthUiState.Success) {
+    androidx.compose.runtime.LaunchedEffect(authState, currentSession) {
+        if (authState is AuthUiState.Success && currentSession != null) {
             onAuthSuccess()
         }
     }
@@ -283,6 +284,13 @@ fun LoginScreen(
                 // Auth Feedback (Error / Success Messages)
                 when (val state = authState) {
                     is AuthUiState.Error -> {
+                        val isUnconfirmedEmail = state.message.contains("Email not confirmed", ignoreCase = true) ||
+                                state.message.contains("email_not_confirmed", ignoreCase = true)
+                        val displayMessage = if (isUnconfirmedEmail) {
+                            "Email not confirmed. Please check your inbox for the confirmation link."
+                        } else {
+                            state.message
+                        }
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             shape = RoundedCornerShape(12.dp),
@@ -301,7 +309,7 @@ fun LoginScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = state.message,
+                                    text = displayMessage,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
@@ -309,6 +317,14 @@ fun LoginScreen(
                         }
                     }
                     is AuthUiState.Success -> {
+                        val isEmailConfirmationRequired = state.message.contains("confirmation email", ignoreCase = true) ||
+                                state.message.contains("confirm it before logging in", ignoreCase = true) ||
+                                state.message.contains("confirm your email", ignoreCase = true)
+                        val displayMessage = if (isEmailConfirmationRequired) {
+                            "Account created! Please check your email inbox to confirm your email before logging in."
+                        } else {
+                            state.message
+                        }
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             shape = RoundedCornerShape(12.dp),
@@ -327,7 +343,7 @@ fun LoginScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = state.message,
+                                    text = displayMessage,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -395,6 +411,35 @@ fun LoginScreen(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Testing Notice for Supabase Auth Confirm Email setting
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Testing tip: To enable instant logins without email confirmation, go to Supabase Dashboard -> Auth -> Email -> turn OFF \"Confirm email\".",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
