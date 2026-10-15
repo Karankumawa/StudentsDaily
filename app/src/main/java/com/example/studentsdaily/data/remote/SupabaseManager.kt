@@ -680,6 +680,7 @@ class SupabaseManager private constructor() {
                     val content = obj.optString("content", "")
                     val dateStr = obj.optString("date_string", "Today")
                     val tag = obj.optString("category_tag", "General")
+                    val isPinned = obj.optBoolean("is_pinned", false) || obj.optBoolean("isPinned", false)
 
                     list.add(
                         Note(
@@ -687,7 +688,8 @@ class SupabaseManager private constructor() {
                             title = title,
                             content = content,
                             dateString = dateStr,
-                            categoryTag = tag
+                            categoryTag = tag,
+                            isPinned = isPinned
                         )
                     )
                 }
@@ -708,6 +710,7 @@ class SupabaseManager private constructor() {
                     put("content", note.content)
                     put("date_string", note.dateString)
                     put("category_tag", note.categoryTag)
+                    put("is_pinned", note.isPinned)
                 }
 
                 val request = Request.Builder()
@@ -734,6 +737,7 @@ class SupabaseManager private constructor() {
                     put("content", note.content)
                     put("date_string", note.dateString)
                     put("category_tag", note.categoryTag)
+                    put("is_pinned", note.isPinned)
                 }
 
                 val request = Request.Builder()

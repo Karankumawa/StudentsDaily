@@ -25,9 +25,12 @@ class HabitNoteViewModel(
         repository.habits,
         repository.notes
     ) { habits, notes ->
+        val sortedNotes = notes.sortedWith(
+            compareByDescending<Note> { it.isPinned }
+        )
         HabitNoteUiState(
             habits = habits,
-            notes = notes,
+            notes = sortedNotes,
             completedHabitsToday = habits.count { it.isCompletedToday },
             totalHabits = habits.size
         )
@@ -67,14 +70,20 @@ class HabitNoteViewModel(
 
     fun updateNote(id: String, title: String, content: String, categoryTag: String, dateString: String = "Today") {
         if (title.isBlank()) return
+        val existing = repository.notes.value.find { it.id == id }
         val updatedNote = Note(
             id = id,
             title = title.trim(),
             content = content.trim(),
             categoryTag = categoryTag.ifBlank { "General" },
-            dateString = dateString
+            dateString = dateString,
+            isPinned = existing?.isPinned ?: false
         )
         repository.updateNote(updatedNote)
+    }
+
+    fun toggleNotePin(id: String) {
+        repository.toggleNotePin(id)
     }
 
     fun deleteNote(id: String) {

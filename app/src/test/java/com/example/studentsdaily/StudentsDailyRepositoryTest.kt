@@ -52,6 +52,15 @@ class StudentsDailyRepositoryTest {
     }
 
     @Test
+    fun testClearSessionAndData() {
+        repository.clearSessionAndData()
+        assertTrue(repository.isGuestMode.value)
+        assertNull(repository.currentSession.value)
+        assertEquals(AuthUiState.Idle, repository.authUiState.value)
+        assertEquals(5000.0, repository.monthlyBudget.value, 0.01)
+    }
+
+    @Test
     fun testExpenseAddUpdateAndDelete() {
         val initialCount = repository.expenses.value.size
         val newExpense = Expense(
@@ -127,6 +136,12 @@ class StudentsDailyRepositoryTest {
         val fetchedNote = repository.notes.value.find { it.id == newNote.id }
         assertEquals("Updated Note Title", fetchedNote?.title)
         assertEquals("Updated Note Content", fetchedNote?.content)
+
+        // Test Pinning
+        assertFalse(fetchedNote!!.isPinned)
+        repository.toggleNotePin(newNote.id)
+        val pinnedNote = repository.notes.value.find { it.id == newNote.id }
+        assertTrue(pinnedNote!!.isPinned)
 
         repository.deleteNote(newNote.id)
         assertFalse(repository.notes.value.any { it.id == newNote.id })

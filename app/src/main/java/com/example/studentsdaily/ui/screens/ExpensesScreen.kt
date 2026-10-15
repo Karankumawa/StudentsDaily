@@ -282,6 +282,42 @@ fun ExpensesScreen(
                 }
             }
 
+            // Budget Alert Banner (triggers when > 75% or > 90%)
+            if (uiState.monthlyBudget > 0 && (uiState.totalExpenseAmount / uiState.monthlyBudget) >= 0.75f) {
+                item {
+                    val pct = ((uiState.totalExpenseAmount / uiState.monthlyBudget) * 100).toInt()
+                    val isCritical = pct >= 90
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isCritical) Color(0xFFFEF2F2) else Color(0xFFFFFBEB)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (isCritical) "🚨 $pct% of Monthly Budget Used! Limit non-essential spending."
+                                else "⚠️ $pct% of Monthly Budget Used! Monitor remaining funds.",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = if (isCritical) Color(0xFFDC2626) else Color(0xFFD97706)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Category Spending Analytics Visualizer
+            item {
+                CategorySpendingAnalyticsCard(
+                    expensesByCategory = uiState.expensesByCategory,
+                    totalExpenseAmount = uiState.totalExpenseAmount
+                )
+            }
+
             // Quick Search Bar
             item {
                 OutlinedTextField(
@@ -778,6 +814,118 @@ fun ExpenseItemCard(
 }
 
 @Composable
+fun CategorySpendingAnalyticsCard(
+    expensesByCategory: Map<ExpenseCategory, Double>,
+    totalExpenseAmount: Double
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.Category,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Category Spending Analytics 📊",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            ExpenseCategory.entries.forEach { category ->
+                val categoryAmount = expensesByCategory[category] ?: 0.0
+                val pct = if (totalExpenseAmount > 0) ((categoryAmount / totalExpenseAmount) * 100).toInt() else 0
+                val progress = if (totalExpenseAmount > 0) (categoryAmount / totalExpenseAmount).toFloat().coerceIn(0f, 1f) else 0f
+
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(category.color.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = category.icon,
+                                    contentDescription = null,
+                                    tint = category.color,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = category.categoryName,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "₹${String.format(Locale.US, "%.2f", categoryAmount)}",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = category.color.copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = "$pct%",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = category.color,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(CircleShape),
+                        color = category.color,
+                        trackColor = category.color.copy(alpha = 0.15f),
+                        strokeCap = StrokeCap.Round
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ExpenseFormBottomSheetContent(
     initialExpense: Expense? = null,
     titleText: String = "Add New Expense",
@@ -819,6 +967,46 @@ fun ExpenseFormBottomSheetContent(
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
+        }
+
+        // Quick Expense One-Tap Presets
+        Column {
+            Text(
+                text = "⚡ Quick Presets (1-Tap Fill)",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val presets = listOf(
+                    Triple("☕ Coffee ₹20", Expense(title = "Coffee", amount = 20.0, category = ExpenseCategory.FOOD, date = "Today"), ExpenseCategory.FOOD),
+                    Triple("🍱 Lunch ₹100", Expense(title = "Lunch", amount = 100.0, category = ExpenseCategory.FOOD, date = "Today"), ExpenseCategory.FOOD),
+                    Triple("🚌 Bus Fare ₹40", Expense(title = "Bus Fare", amount = 40.0, category = ExpenseCategory.TRANSPORT, date = "Today"), ExpenseCategory.TRANSPORT),
+                    Triple("📚 Printouts ₹30", Expense(title = "Printouts", amount = 30.0, category = ExpenseCategory.ACADEMIC, date = "Today"), ExpenseCategory.ACADEMIC)
+                )
+
+                presets.forEach { (chipLabel, presetExp, cat) ->
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            title = presetExp.title
+                            amountText = String.format(Locale.US, "%.2f", presetExp.amount)
+                            selectedCategory = cat
+                            date = "Today"
+                        },
+                        label = { Text(chipLabel, fontWeight = FontWeight.SemiBold) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+                }
+            }
         }
 
         OutlinedTextField(

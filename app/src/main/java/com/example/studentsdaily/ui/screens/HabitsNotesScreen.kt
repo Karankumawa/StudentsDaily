@@ -28,7 +28,9 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -278,6 +280,7 @@ fun HabitsNotesScreen(
                             NoteItemCard(
                                 note = note,
                                 onNoteClick = { onNoteClick(note.id) },
+                                onTogglePin = { viewModel.toggleNotePin(note.id) },
                                 onEdit = { noteToEdit = note },
                                 onDelete = { viewModel.deleteNote(note.id) }
                             )
@@ -415,7 +418,10 @@ fun HabitItemCard(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = Color(0xFFFF6D00).copy(alpha = 0.15f)
@@ -439,13 +445,27 @@ fun HabitItemCard(
                             }
                         }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        val milestoneText = when {
+                            habit.streak >= 30 -> "🔥 30 Day Legend Badge! 🏆"
+                            habit.streak >= 14 -> "🔥 14 Day Master Badge! ⚡"
+                            habit.streak >= 7 -> "🔥 7 Day Streak Master! 🌟"
+                            habit.streak >= 3 -> "🔥 3 Day Starter Streak! 👍"
+                            else -> null
+                        }
 
-                        Text(
-                            text = "Target: ${habit.targetDays} days",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        milestoneText?.let { badgeText ->
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFFFF3E0)
+                            ) {
+                                Text(
+                                    text = badgeText,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color(0xFFE65100),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -496,6 +516,7 @@ fun HabitItemCard(
 fun NoteItemCard(
     note: Note,
     onNoteClick: () -> Unit = {},
+    onTogglePin: () -> Unit = {},
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
@@ -504,7 +525,9 @@ fun NoteItemCard(
             .fillMaxWidth()
             .clickable { onNoteClick() },
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (note.isPinned) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -534,15 +557,38 @@ fun NoteItemCard(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = note.title,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (note.isPinned) {
+                            Text(
+                                text = "📌 ",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Text(
+                            text = note.title,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (note.isPinned) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(end = 6.dp)
+                            ) {
+                                Text(
+                                    text = "PINNED",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = MaterialTheme.colorScheme.secondaryContainer
@@ -563,6 +609,14 @@ fun NoteItemCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+
+                IconButton(onClick = onTogglePin) {
+                    Icon(
+                        imageVector = Icons.Rounded.PushPin,
+                        contentDescription = "Toggle Pin Note",
+                        tint = if (note.isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
                 }
 
                 IconButton(onClick = onEdit) {

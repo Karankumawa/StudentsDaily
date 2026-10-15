@@ -1,5 +1,8 @@
 package com.example.studentsdaily.ui.screens
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -304,6 +307,54 @@ fun TasksScreen(
     }
 }
 
+enum class DueStatus(val label: String, val textColor: Color, val bgColor: Color) {
+    OVERDUE("Overdue", Color(0xFFDC2626), Color(0xFFFEF2F2)),
+    DUE_TODAY("Due Today", Color(0xFFD97706), Color(0xFFFFFBEB)),
+    UPCOMING("Upcoming", Color(0xFF16A34A), Color(0xFFF0FDF4))
+}
+
+fun calculateDueStatus(dueDateStr: String): DueStatus {
+    val trimmed = dueDateStr.trim().lowercase()
+    if (trimmed == "today") return DueStatus.DUE_TODAY
+    if (trimmed == "yesterday") return DueStatus.OVERDUE
+    if (trimmed == "tomorrow") return DueStatus.UPCOMING
+
+    try {
+        val formats = listOf(
+            SimpleDateFormat("yyyy-MM-dd", Locale.US),
+            SimpleDateFormat("dd/MM/yyyy", Locale.US),
+            SimpleDateFormat("dd MMM yyyy", Locale.US)
+        )
+        for (f in formats) {
+            try {
+                val parsed = f.parse(dueDateStr.trim())
+                if (parsed != null) {
+                    val todayCal = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    val dueDay = Calendar.getInstance().apply {
+                        time = parsed
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    return when {
+                        dueDay.before(todayCal) -> DueStatus.OVERDUE
+                        dueDay.equals(todayCal) -> DueStatus.DUE_TODAY
+                        else -> DueStatus.UPCOMING
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+    } catch (_: Exception) {}
+
+    return DueStatus.UPCOMING
+}
+
 @Composable
 fun TaskItemCard(
     task: TaskItem,
@@ -369,18 +420,29 @@ fun TaskItemCard(
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Rounded.CalendarToday,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = "Due: ${task.dueDate}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        val dueStatus = remember(task.dueDate) { calculateDueStatus(task.dueDate) }
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = dueStatus.bgColor
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.CalendarToday,
+                                    contentDescription = null,
+                                    tint = dueStatus.textColor,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = dueStatus.label,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = dueStatus.textColor
+                                )
+                            }
+                        }
                     }
 
                     // Priority Chip with Flag Icon

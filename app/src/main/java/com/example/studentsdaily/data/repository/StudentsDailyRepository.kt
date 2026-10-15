@@ -135,7 +135,11 @@ class StudentsDailyRepository private constructor() {
     }
 
     fun signOut() {
-        appContext?.let { AuthPreferences.clearSession(it) }
+        clearSessionAndData()
+    }
+
+    fun clearSessionAndData() {
+        appContext?.let { AuthPreferences.clearSessionAndData(it) }
         _currentSession.value = null
         _isGuestMode.value = true
         _expenses.value = initialExpenses()
@@ -143,6 +147,7 @@ class StudentsDailyRepository private constructor() {
         _tasks.value = initialTasks()
         _habits.value = initialHabits()
         _notes.value = initialNotes()
+        _monthlyBudget.value = 5000.0
         _authUiState.value = AuthUiState.Idle
     }
 
@@ -356,6 +361,25 @@ class StudentsDailyRepository private constructor() {
         if (session != null) {
             repositoryScope.launch {
                 supabaseManager.updateNote(session.user.id, session.accessToken, note)
+            }
+        }
+    }
+
+    fun toggleNotePin(id: String) {
+        var updatedNote: Note? = null
+        _notes.value = _notes.value.map { note ->
+            if (note.id == id) {
+                val newPinned = !note.isPinned
+                note.copy(isPinned = newPinned).also { updatedNote = it }
+            } else {
+                note
+            }
+        }
+        val session = _currentSession.value
+        val noteToUpdate = updatedNote
+        if (session != null && noteToUpdate != null) {
+            repositoryScope.launch {
+                supabaseManager.updateNote(session.user.id, session.accessToken, noteToUpdate)
             }
         }
     }

@@ -59,6 +59,10 @@ object AuthPreferences {
     }
 
     fun clearSession(context: Context) {
+        clearSessionAndData(context)
+    }
+
+    fun clearSessionAndData(context: Context) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val introCompleted = prefs.getBoolean(KEY_INTRO_COMPLETED, false)
         prefs.edit {

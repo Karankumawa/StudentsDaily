@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Title
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -90,6 +91,13 @@ fun NoteDetailScreen(
                 },
                 actions = {
                     if (note != null) {
+                        IconButton(onClick = { viewModel.toggleNotePin(note.id) }) {
+                            Icon(
+                                imageVector = Icons.Rounded.PushPin,
+                                contentDescription = "Toggle Pin Note",
+                                tint = if (note.isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         IconButton(onClick = { showEditBottomSheet = true }) {
                             Icon(
                                 imageVector = Icons.Rounded.Edit,

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 data class TimetableUiState(
     val timetableItems: List<TimetableItem> = emptyList(),
     val selectedDay: String = "All",
+    val searchQuery: String = "",
     val filteredItems: List<TimetableItem> = emptyList()
 )
 
@@ -24,18 +25,27 @@ class TimetableViewModel(
     private val _selectedDay = MutableStateFlow("All")
     val selectedDay: StateFlow<String> = _selectedDay
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
     val uiState: StateFlow<TimetableUiState> = combine(
         repository.timetableItems,
-        _selectedDay
-    ) { items, day ->
-        val filtered = if (day == "All") {
-            items
-        } else {
-            items.filter { it.dayOfWeek.equals(day, ignoreCase = true) }
+        _selectedDay,
+        _searchQuery
+    ) { items, day, query ->
+        val q = query.trim().lowercase()
+        val filtered = items.filter { item ->
+            val matchesDay = day == "All" || item.dayOfWeek.equals(day, ignoreCase = true)
+            val matchesSearch = q.isEmpty() ||
+                    item.subject.lowercase().contains(q) ||
+                    item.instructor.lowercase().contains(q) ||
+                    item.room.lowercase().contains(q)
+            matchesDay && matchesSearch
         }
         TimetableUiState(
             timetableItems = items,
             selectedDay = day,
+            searchQuery = query,
             filteredItems = filtered
         )
     }.stateIn(
@@ -46,6 +56,10 @@ class TimetableViewModel(
 
     fun setSelectedDay(day: String) {
         _selectedDay.value = day
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
     }
 
     fun addTimetableItem(

@@ -7,5 +7,6 @@ data class Note(
     val title: String,
     val content: String,
     val dateString: String,
-    val categoryTag: String
+    val categoryTag: String,
+    val isPinned: Boolean = false
 )
