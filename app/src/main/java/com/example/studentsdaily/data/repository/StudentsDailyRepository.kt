@@ -160,18 +160,56 @@ class StudentsDailyRepository private constructor() {
     private fun refreshUserDataFromSupabase() {
         val session = _currentSession.value ?: return
         repositoryScope.launch {
-            val remoteExpenses = supabaseManager.fetchExpenses(session.user.id, session.accessToken)
-            val remoteTimetable = supabaseManager.fetchTimetableItems(session.user.id, session.accessToken)
-            val remoteTasks = supabaseManager.fetchTasks(session.user.id, session.accessToken)
-            val remoteHabits = supabaseManager.fetchHabits(session.user.id, session.accessToken)
-            val remoteNotes = supabaseManager.fetchNotes(session.user.id, session.accessToken)
-
-            _expenses.value = remoteExpenses
-            _timetableItems.value = remoteTimetable
-            _tasks.value = remoteTasks
-            _habits.value = remoteHabits
-            _notes.value = remoteNotes
+            syncLocalItemsToSupabase(session)
         }
+    }
+
+    private suspend fun syncLocalItemsToSupabase(session: SupabaseSession) {
+        val currentExp = _expenses.value
+        val currentTt = _timetableItems.value
+        val currentTasks = _tasks.value
+        val currentHabits = _habits.value
+        val currentNotes = _notes.value
+
+        // Fetch existing remote items from Supabase
+        val remoteExp = supabaseManager.fetchExpenses(session.user.id, session.accessToken)
+        val remoteTt = supabaseManager.fetchTimetableItems(session.user.id, session.accessToken)
+        val remoteTasks = supabaseManager.fetchTasks(session.user.id, session.accessToken)
+        val remoteHabits = supabaseManager.fetchHabits(session.user.id, session.accessToken)
+        val remoteNotes = supabaseManager.fetchNotes(session.user.id, session.accessToken)
+
+        // Upload local items created while offline/guest that do not exist remotely
+        val remoteExpIds = remoteExp.map { it.id }.toSet()
+        currentExp.filterNot { it.id in remoteExpIds }.forEach {
+            supabaseManager.insertExpense(session.user.id, session.accessToken, it)
+        }
+
+        val remoteTtIds = remoteTt.map { it.id }.toSet()
+        currentTt.filterNot { it.id in remoteTtIds }.forEach {
+            supabaseManager.insertTimetableItem(session.user.id, session.accessToken, it)
+        }
+
+        val remoteTaskIds = remoteTasks.map { it.id }.toSet()
+        currentTasks.filterNot { it.id in remoteTaskIds }.forEach {
+            supabaseManager.insertTask(session.user.id, session.accessToken, it)
+        }
+
+        val remoteHabitIds = remoteHabits.map { it.id }.toSet()
+        currentHabits.filterNot { it.id in remoteHabitIds }.forEach {
+            supabaseManager.insertHabit(session.user.id, session.accessToken, it)
+        }
+
+        val remoteNoteIds = remoteNotes.map { it.id }.toSet()
+        currentNotes.filterNot { it.id in remoteNoteIds }.forEach {
+            supabaseManager.insertNote(session.user.id, session.accessToken, it)
+        }
+
+        // Re-fetch updated list from Supabase
+        _expenses.value = supabaseManager.fetchExpenses(session.user.id, session.accessToken)
+        _timetableItems.value = supabaseManager.fetchTimetableItems(session.user.id, session.accessToken)
+        _tasks.value = supabaseManager.fetchTasks(session.user.id, session.accessToken)
+        _habits.value = supabaseManager.fetchHabits(session.user.id, session.accessToken)
+        _notes.value = supabaseManager.fetchNotes(session.user.id, session.accessToken)
     }
 
     fun updateFullName(newName: String, onComplete: (Boolean, String) -> Unit = { _, _ -> }) {

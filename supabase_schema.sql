@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
     content TEXT DEFAULT '',
     date_string TEXT DEFAULT 'Today',
     category_tag TEXT DEFAULT 'General',
+    is_pinned BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

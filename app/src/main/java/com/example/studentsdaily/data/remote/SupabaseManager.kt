@@ -14,6 +14,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
@@ -257,8 +258,12 @@ class SupabaseManager private constructor() {
                     .build()
 
                 val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    Log.e("SupabaseManager", "Error inserting expense (${response.code}): ${response.body?.string()}")
+                }
                 response.isSuccessful
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("SupabaseManager", "Exception in insertExpense", e)
                 false
             }
         }
@@ -390,8 +395,12 @@ class SupabaseManager private constructor() {
                     .build()
 
                 val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    Log.e("SupabaseManager", "Error inserting timetable item (${response.code}): ${response.body?.string()}")
+                }
                 response.isSuccessful
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("SupabaseManager", "Exception in insertTimetableItem", e)
                 false
             }
         }
@@ -490,8 +499,12 @@ class SupabaseManager private constructor() {
                     .build()
 
                 val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    Log.e("SupabaseManager", "Error inserting task (${response.code}): ${response.body?.string()}")
+                }
                 response.isSuccessful
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("SupabaseManager", "Exception in insertTask", e)
                 false
             }
         }
@@ -604,8 +617,12 @@ class SupabaseManager private constructor() {
                     .build()
 
                 val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    Log.e("SupabaseManager", "Error inserting habit (${response.code}): ${response.body?.string()}")
+                }
                 response.isSuccessful
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("SupabaseManager", "Exception in insertHabit", e)
                 false
             }
         }
@@ -728,8 +745,12 @@ class SupabaseManager private constructor() {
                     .build()
 
                 val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    Log.e("SupabaseManager", "Error inserting note (${response.code}): ${response.body?.string()}")
+                }
                 response.isSuccessful
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("SupabaseManager", "Exception in insertNote", e)
                 false
             }
         }
