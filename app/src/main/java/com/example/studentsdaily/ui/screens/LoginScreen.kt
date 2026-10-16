@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -195,16 +196,25 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Sign In Option
-                        val signInBgColor by animateColorAsState(
-                            targetValue = if (selectedTabIndex == 0) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "SignInBg"
-                        )
-                        val signInTextColor by animateColorAsState(
-                            targetValue = if (selectedTabIndex == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "SignInText"
-                        )
+                        val isPreview = LocalInspectionMode.current
+                        val signInBgColor = if (isPreview) {
+                            if (selectedTabIndex == 0) MaterialTheme.colorScheme.primary else Color.Transparent
+                        } else {
+                            animateColorAsState(
+                                targetValue = if (selectedTabIndex == 0) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                animationSpec = tween(durationMillis = 200),
+                                label = "SignInBg"
+                            ).value
+                        }
+                        val signInTextColor = if (isPreview) {
+                            if (selectedTabIndex == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            animateColorAsState(
+                                targetValue = if (selectedTabIndex == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                animationSpec = tween(durationMillis = 200),
+                                label = "SignInText"
+                            ).value
+                        }
 
                         Box(
                             modifier = Modifier
@@ -230,16 +240,24 @@ fun LoginScreen(
                         }
 
                         // Create Account Option
-                        val createAccountBgColor by animateColorAsState(
-                            targetValue = if (selectedTabIndex == 1) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "CreateAccountBg"
-                        )
-                        val createAccountTextColor by animateColorAsState(
-                            targetValue = if (selectedTabIndex == 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "CreateAccountText"
-                        )
+                        val createAccountBgColor = if (isPreview) {
+                            if (selectedTabIndex == 1) MaterialTheme.colorScheme.primary else Color.Transparent
+                        } else {
+                            animateColorAsState(
+                                targetValue = if (selectedTabIndex == 1) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                animationSpec = tween(durationMillis = 200),
+                                label = "CreateAccountBg"
+                            ).value
+                        }
+                        val createAccountTextColor = if (isPreview) {
+                            if (selectedTabIndex == 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            animateColorAsState(
+                                targetValue = if (selectedTabIndex == 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                animationSpec = tween(durationMillis = 200),
+                                label = "CreateAccountText"
+                            ).value
+                        }
 
                         Box(
                             modifier = Modifier
@@ -566,7 +584,7 @@ fun LoginScreen(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun LoginScreenPreview() {
     StudentsDailyTheme {

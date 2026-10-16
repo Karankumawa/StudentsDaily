@@ -79,10 +79,13 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val isInPreview = androidx.compose.ui.platform.LocalInspectionMode.current
 
     LaunchedEffect(uiState.updateMessage) {
         uiState.updateMessage?.let { msg ->
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            if (!isInPreview) {
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            }
             viewModel.clearMessage()
         }
     }

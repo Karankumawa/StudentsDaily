@@ -16,46 +16,64 @@ object AuthPreferences {
     private const val KEY_MONTHLY_BUDGET = "monthly_budget"
 
     fun getMonthlyBudget(context: Context, defaultBudget: Double = 5000.0): Double {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getFloat(KEY_MONTHLY_BUDGET, defaultBudget.toFloat()).toDouble()
-    }
-
-    fun setMonthlyBudget(context: Context, budget: Double) {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit { putFloat(KEY_MONTHLY_BUDGET, budget.toFloat()) }
-    }
-
-    fun isIntroCompleted(context: Context): Boolean {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getBoolean(KEY_INTRO_COMPLETED, false)
-    }
-
-    fun setIntroCompleted(context: Context, completed: Boolean = true) {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit { putBoolean(KEY_INTRO_COMPLETED, completed) }
-    }
-
-    fun saveSession(context: Context, session: SupabaseSession) {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit {
-            putString(KEY_ACCESS_TOKEN, session.accessToken)
-            putString(KEY_REFRESH_TOKEN, session.refreshToken)
-            putString(KEY_USER_ID, session.user.id)
-            putString(KEY_USER_EMAIL, session.user.email)
-            putString(KEY_USER_FULL_NAME, session.user.fullName)
+        return try {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.getFloat(KEY_MONTHLY_BUDGET, defaultBudget.toFloat()).toDouble()
+        } catch (_: Exception) {
+            defaultBudget
         }
     }
 
-    fun loadSession(context: Context): SupabaseSession? {
-        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val token = prefs.getString(KEY_ACCESS_TOKEN, null) ?: return null
-        val userId = prefs.getString(KEY_USER_ID, null) ?: return null
-        val email = prefs.getString(KEY_USER_EMAIL, "") ?: ""
-        val fullName = prefs.getString(KEY_USER_FULL_NAME, "") ?: ""
-        val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, "") ?: ""
+    fun setMonthlyBudget(context: Context, budget: Double) {
+        try {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit { putFloat(KEY_MONTHLY_BUDGET, budget.toFloat()) }
+        } catch (_: Exception) {}
+    }
 
-        val user = SupabaseUser(id = userId, email = email, fullName = fullName)
-        return SupabaseSession(accessToken = token, refreshToken = refreshToken, user = user)
+    fun isIntroCompleted(context: Context): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.getBoolean(KEY_INTRO_COMPLETED, false)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun setIntroCompleted(context: Context, completed: Boolean = true) {
+        try {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit { putBoolean(KEY_INTRO_COMPLETED, completed) }
+        } catch (_: Exception) {}
+    }
+
+    fun saveSession(context: Context, session: SupabaseSession) {
+        try {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit {
+                putString(KEY_ACCESS_TOKEN, session.accessToken)
+                putString(KEY_REFRESH_TOKEN, session.refreshToken)
+                putString(KEY_USER_ID, session.user.id)
+                putString(KEY_USER_EMAIL, session.user.email)
+                putString(KEY_USER_FULL_NAME, session.user.fullName)
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun loadSession(context: Context): SupabaseSession? {
+        return try {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val token = prefs.getString(KEY_ACCESS_TOKEN, null) ?: return null
+            val userId = prefs.getString(KEY_USER_ID, null) ?: return null
+            val email = prefs.getString(KEY_USER_EMAIL, "") ?: ""
+            val fullName = prefs.getString(KEY_USER_FULL_NAME, "") ?: ""
+            val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, "") ?: ""
+
+            val user = SupabaseUser(id = userId, email = email, fullName = fullName)
+            SupabaseSession(accessToken = token, refreshToken = refreshToken, user = user)
+        } catch (_: Exception) {
+            null
+        }
     }
 
     fun clearSession(context: Context) {

@@ -37,11 +37,17 @@ sealed interface SupabaseAuthResult {
 
 class SupabaseManager private constructor() {
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient by lazy {
+        try {
+            OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS)
+                .build()
+        } catch (_: Throwable) {
+            OkHttpClient.Builder().build()
+        }
+    }
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
