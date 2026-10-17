@@ -126,7 +126,7 @@ fun StudentsDailyMainApp(
         contentWindowInsets = WindowInsets.systemBars,
         topBar = {
             if (showTopBar) {
-                CenterAlignedTopAppBar(
+                androidx.compose.material3.TopAppBar(
                     title = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -137,11 +137,11 @@ fun StudentsDailyMainApp(
                                         backStack.add(ScreenRoute.Profile)
                                     }
                                 }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(36.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
@@ -150,10 +150,10 @@ fun StudentsDailyMainApp(
                                     imageVector = Icons.Rounded.School,
                                     contentDescription = "StudentsDaily Branding",
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column(horizontalAlignment = Alignment.Start) {
                                 Text(
                                     text = greetingText,
@@ -165,7 +165,9 @@ fun StudentsDailyMainApp(
                                 Text(
                                     text = "${currentRoute.title} • $dateFormatted",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -234,7 +236,7 @@ fun StudentsDailyMainApp(
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
                 )

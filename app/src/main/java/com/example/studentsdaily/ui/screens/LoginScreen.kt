@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -219,7 +221,7 @@ fun LoginScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(44.dp)
+                                .defaultMinSize(minHeight = 44.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(signInBgColor)
                                 .clickable {
@@ -227,7 +229,8 @@ fun LoginScreen(
                                         selectedTabIndex = 0
                                         repository.clearAuthError()
                                     }
-                                },
+                                }
+                                .padding(horizontal = 8.dp, vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -235,7 +238,9 @@ fun LoginScreen(
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
-                                color = signInTextColor
+                                color = signInTextColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -262,7 +267,7 @@ fun LoginScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(44.dp)
+                                .defaultMinSize(minHeight = 44.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(createAccountBgColor)
                                 .clickable {
@@ -270,7 +275,8 @@ fun LoginScreen(
                                         selectedTabIndex = 1
                                         repository.clearAuthError()
                                     }
-                                },
+                                }
+                                .padding(horizontal = 8.dp, vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -278,7 +284,9 @@ fun LoginScreen(
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold
                                 ),
-                                color = createAccountTextColor
+                                color = createAccountTextColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

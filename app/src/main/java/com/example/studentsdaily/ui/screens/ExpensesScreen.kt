@@ -132,7 +132,10 @@ fun ExpensesScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Rounded.ReceiptLong,
                                         contentDescription = null,
@@ -143,9 +146,13 @@ fun ExpensesScreen(
                                     Text(
                                         text = "TOTAL SPENT THIS MONTH",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Color(0xFFDCFCE7)
+                                        color = Color(0xFFDCFCE7),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
+
+                                Spacer(modifier = Modifier.width(8.dp))
 
                                 Surface(
                                     shape = CircleShape,
@@ -155,7 +162,9 @@ fun ExpensesScreen(
                                         text = "${uiState.expenses.size} expenses logged",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -167,7 +176,9 @@ fun ExpensesScreen(
                                 style = MaterialTheme.typography.displayMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White
-                                )
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
 
                             Spacer(modifier = Modifier.height(14.dp))
@@ -183,11 +194,16 @@ fun ExpensesScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                ) {
                                     Text(
                                         text = "Monthly Budget: ₹${String.format(Locale.US, "%.2f", uiState.monthlyBudget)}",
                                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                        color = Color(0xFFDCFCE7)
+                                        color = Color(0xFFDCFCE7),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     IconButton(
                                         onClick = { showEditBudgetDialog = true },
@@ -201,6 +217,8 @@ fun ExpensesScreen(
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.width(6.dp))
 
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
@@ -232,47 +250,57 @@ fun ExpensesScreen(
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
+                                    modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp),
                                     color = if (remainingBudget < 0) Color(0xFFEF4444).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f)
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
                                         Text(
                                             text = "Remaining: ",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFFDCFCE7)
+                                            color = Color(0xFFDCFCE7),
+                                            maxLines = 1
                                         )
                                         Text(
                                             text = "₹${String.format(Locale.US, "%.2f", remainingBudget)}",
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = if (remainingBudget < 0) Color(0xFFFECACA) else Color.White
+                                            color = if (remainingBudget < 0) Color(0xFFFECACA) else Color.White,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
 
                                 Surface(
+                                    modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp),
                                     color = Color.White.copy(alpha = 0.15f)
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
                                         Text(
                                             text = "Daily Avg: ",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFFDCFCE7)
+                                            color = Color(0xFFDCFCE7),
+                                            maxLines = 1
                                         )
                                         Text(
-                                            text = "₹${String.format(Locale.US, "%.2f", dailyAvgSpent)} / day",
+                                            text = "₹${String.format(Locale.US, "%.2f", dailyAvgSpent)}/day",
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = Color.White
+                                            color = Color.White,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
