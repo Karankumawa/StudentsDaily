@@ -778,9 +778,9 @@ fun NoteFormBottomSheetContent(
             onValueChange = { content = it },
             label = { Text("Note Content / Lecture Key Points") },
             leadingIcon = { Icon(imageVector = Icons.Rounded.Description, contentDescription = null) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
+            minLines = 4,
+            maxLines = 8,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Row(

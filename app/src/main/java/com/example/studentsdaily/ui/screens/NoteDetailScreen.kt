@@ -74,7 +74,7 @@ fun NoteDetailScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            CenterAlignedTopAppBar(
+            androidx.compose.material3.TopAppBar(
                 title = {
                     Text(
                         text = "Lecture Note Detail",
@@ -304,6 +304,7 @@ fun EditNoteBottomSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -337,9 +338,9 @@ fun EditNoteBottomSheetContent(
             onValueChange = { content = it },
             label = { Text("Note Content / Lecture Key Points") },
             leadingIcon = { Icon(imageVector = Icons.Rounded.Description, contentDescription = null) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
+            minLines = 4,
+            maxLines = 8,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Row(
